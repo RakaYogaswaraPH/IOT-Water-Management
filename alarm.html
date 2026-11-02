@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WaterPlant Monitoring — Alarm</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Sembunyikan scrollbar di seluruh browser tapi fungsi scroll tetap berjalan */
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Live pulse animation */
+  @keyframes live-pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+  .pulse-critical {
+    animation: live-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  /* Toast notification */
+  #toastNotification {
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
+  }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+
+<!-- Mobile sidebar backdrop -->
+<div id="backdrop" class="hidden fixed inset-0 bg-slate-900/40 z-30 lg:hidden"></div>
+
+<!-- Toast notification popup -->
+<div id="toastNotification" class="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 border border-slate-700">
+  <div id="toastIcon" class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+    <i data-lucide="check" class="w-4 h-4"></i>
+  </div>
+  <p id="toastMessage" class="text-sm font-medium">Semua alarm telah ditandai terbaca</p>
+</div>
+
+<div class="flex min-h-screen">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col -translate-x-full transition-transform duration-200 lg:translate-x-0 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:shrink-0">
+    <div class="flex items-center gap-3 px-5 h-16 border-b border-slate-200">
+      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+        <i data-lucide="droplets" class="w-5 h-5 text-white"></i>
+      </div>
+      <div class="leading-tight">
+        <p class="font-semibold text-slate-900 text-sm">WaterPlant Monitoring</p>
+        <p class="text-xs text-slate-400">IoT Water Management</p>
+      </div>
+      <button id="closeSidebar" class="ml-auto lg:hidden text-slate-400 hover:text-slate-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <p class="px-3 text-xs font-medium text-slate-400 mb-2">Menu Utama</p>
+
+      <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
+        <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+        Beranda
+      </a>
+      <a href="alarm.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-600 border-l-2 border-blue-600 font-medium text-sm transition-colors">
+        <i data-lucide="bell-ring" class="w-4.5 h-4.5"></i>
+        Alarm
+        <span id="sidebarAlarmBadge" class="ml-auto text-xs bg-rose-100 text-rose-600 font-semibold px-1.5 py-0.5 rounded-md">3</span>
+      </a>
+      <a href="control.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
+        <i data-lucide="settings-2" class="w-4.5 h-4.5"></i>
+        Kontrol Pompa
+      </a>
+      <a href="log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
+        <i data-lucide="history" class="w-4.5 h-4.5"></i>
+        Log Aktivitas
+      </a>
+      <a href="report.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
+        <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+        Laporan Harian
+      </a>
+    </nav>
+
+    <div class="p-3 border-t border-slate-200">
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm transition-colors">
+        <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
+        Keluar
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- TOP BAR -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-20">
+      <button id="openSidebar" class="lg:hidden text-slate-500 hover:text-slate-700 p-1">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+
+      <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full max-w-xs text-slate-400 focus-within:border-blue-500 focus-within:bg-white transition-all">
+        <i data-lucide="search" class="w-4 h-4"></i>
+        <input type="text" id="topSearchInput" oninput="handleSearch(this.value)" placeholder="Cari alarm, gedung, sensor..." class="bg-transparent outline-none text-sm text-slate-600 placeholder:text-slate-400 w-full">
+      </div>
+
+      <button onclick="document.getElementById('topSearchInput').focus()" class="sm:hidden ml-auto text-slate-500">
+        <i data-lucide="search" class="w-5 h-5"></i>
+      </button>
+
+      <div class="hidden sm:block flex-1"></div>
+
+      <div class="flex items-center gap-4 ml-auto sm:ml-0 shrink-0">
+        <div class="flex items-center gap-2">
+          <img src="https://i.pravatar.cc/64?img=12" class="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/20" alt="Admin">
+          <div class="hidden md:block leading-tight">
+            <p class="text-sm font-medium text-slate-700">Administrator</p>
+            <p class="text-xs text-slate-400">Operator</p>
+          </div>
+          <i data-lucide="chevron-down" class="hidden md:block w-4 h-4 text-slate-400"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="flex-1 p-4 sm:p-6 space-y-6">
+
+      <!-- Page heading & Actions -->
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Alarm</h1>
+          <p class="text-sm text-slate-400 mt-0.5">Notifikasi Low/High Level, Low/High Pressure, Fail Pump, dan Pipa Bocor</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="resetToInitialData()" title="Pulihkan data dummy awal" class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            Reset Data Dummy
+          </button>
+          <button onclick="markAllAsRead()" class="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-600/20 active:scale-95 transition-all">
+            <i data-lucide="check-check" class="w-4 h-4"></i>
+            Tandai semua terbaca
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary chips (Dynamic) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          <p class="text-xs text-slate-400">Total Alarm Aktif</p>
+          <p id="statActiveAlarms" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">3</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          <p class="text-xs text-slate-400">Kritis</p>
+          <p id="statCriticalAlarms" class="text-2xl font-semibold text-rose-600 mt-1 font-mono">1</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          <p class="text-xs text-slate-400">Peringatan</p>
+          <p id="statWarningAlarms" class="text-2xl font-semibold text-amber-600 mt-1 font-mono">2</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          <p class="text-xs text-slate-400">Selesai Hari Ini</p>
+          <p id="statResolvedToday" class="text-2xl font-semibold text-emerald-600 mt-1 font-mono">1</p>
+        </div>
+      </div>
+
+      <!-- Filter bar (Interactive) -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col lg:flex-row lg:items-center gap-3 shadow-sm">
+        <div id="filterTabsContainer" class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+          <button onclick="setFilter('all')" data-filter="all" class="filter-btn shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-xs transition-colors">
+            Semua
+          </button>
+          <button onclick="setFilter('unread')" data-filter="unread" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Belum Dibaca <span id="unreadTabBadge" class="ml-1 text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.2 rounded-full font-bold">3</span>
+          </button>
+          <button onclick="setFilter('active')" data-filter="active" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Aktif
+          </button>
+          <button onclick="setFilter('resolved')" data-filter="resolved" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Selesai
+          </button>
+          <span class="w-px h-5 bg-slate-200 shrink-0 mx-1"></span>
+          <button onclick="setFilter('Level')" data-filter="Level" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Level
+          </button>
+          <button onclick="setFilter('Tekanan')" data-filter="Tekanan" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Tekanan
+          </button>
+          <button onclick="setFilter('Pompa')" data-filter="Pompa" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Pompa
+          </button>
+          <button onclick="setFilter('Pipa Bocor')" data-filter="Pipa Bocor" class="filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            Pipa Bocor
+          </button>
+        </div>
+
+        <div class="lg:ml-auto flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-slate-400 w-full sm:w-60 shrink-0">
+          <i data-lucide="building-2" class="w-4 h-4"></i>
+          <select id="buildingSelect" onchange="setBuilding(this.value)" class="bg-transparent outline-none text-xs text-slate-700 font-medium w-full cursor-pointer">
+            <option value="all">Semua Waterplant / Gedung</option>
+            <option value="Gedung A">Waterplant A (Gedung A)</option>
+            <option value="Gedung B">Waterplant B (Gedung B)</option>
+            <option value="Gedung C">Waterplant C (Gedung C)</option>
+            <option value="Gedung D">Waterplant D (Gedung D)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Notification feed (Rendered Dynamically from JSON) -->
+      <div id="alarmFeedContainer" class="space-y-5">
+        <!-- Rendered by JavaScript -->
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL DETAIL ALARM                                                        -->
+<!-- ========================================================================= -->
+<div id="alarmDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+  <div id="alarmModalBackdrop" onclick="closeAlarmModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+
+  <div id="alarmModalContainer" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col border border-slate-200 overflow-hidden transform scale-95 opacity-0 transition-all duration-300 z-10">
+    <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="modalAlarmIconContainer" class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
+          <i id="modalAlarmIcon" data-lucide="alert-octagon" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 id="modalAlarmTitle" class="text-sm font-bold text-slate-900 leading-tight">Detail Alarm</h3>
+          <p id="modalAlarmLocation" class="text-xs text-slate-400 mt-0.5">Lokasi kejadian</p>
+        </div>
+      </div>
+      <button onclick="closeAlarmModal()" class="text-slate-400 hover:text-slate-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-slate-400 block text-[11px]">Tingkat Keparahan</span>
+          <span id="modalAlarmSeverity" class="font-bold text-rose-600 mt-0.5 block">Kritis</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-slate-400 block text-[11px]">Waktu Tercatat</span>
+          <span id="modalAlarmTime" class="font-mono text-slate-700 font-semibold mt-0.5 block">09:46 WIB</span>
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Deskripsi Masalah</label>
+        <p id="modalAlarmDesc" class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed">
+          -
+        </p>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Rekomendasi Tindakan Teknisi</label>
+        <div class="flex items-start gap-2 bg-blue-50/70 border border-blue-100 p-3 rounded-lg text-xs text-blue-800">
+          <i data-lucide="info" class="w-4 h-4 text-blue-600 mt-0.5 shrink-0"></i>
+          <p id="modalAlarmRecommendation" class="leading-relaxed">-</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+      <button id="modalBtnToggleRead" onclick="handleModalToggleRead()" class="text-xs font-medium text-slate-600 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 bg-white">
+        Tandai Dibaca
+      </button>
+      <div class="flex items-center gap-2">
+        <button id="modalBtnToggleResolve" onclick="handleModalToggleResolve()" class="text-xs font-semibold px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
+          Selesaikan Alarm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT: DUMMY JSON DATA & INTERAKTIF                                   -->
+<!-- ========================================================================= -->
+<script>
+  // =========================================================================
+  // 1. DUMMY JSON DATA (Disimpan dalam satu file ini)
+  // =========================================================================
+  const INITIAL_ALARMS_JSON = [
+    {
+      id: "ALM-001",
+      title: "Fail Pump — Pompa 1 gagal berjalan",
+      category: "Pompa",
+      severity: "Kritis",
+      location: "Gedung C · Ruang Pompa Utama",
+      building: "Gedung C",
+      time: "14 mnt lalu · 09:46",
+      group: "Hari Ini",
+      isRead: false,
+      isResolved: false,
+      icon: "alert-octagon",
+      iconBg: "bg-rose-50",
+      iconColor: "text-rose-600",
+      badgeBg: "bg-rose-100",
+      badgeColor: "text-rose-600",
+      description: "Thermal overload relay trip pada motor Pompa 1 saat auto-transfer mode. Tekanan drop ke 0.4 bar dan debit 0.0 L/menit.",
+      recommendation: "Periksa rotor dari kemungkinan penyumbatan mekanik dan reset proteksi termal di panel kontrol Gedung C."
+    },
+    {
+      id: "ALM-002",
+      title: "Low Level — Level tangki di bawah 25%",
+      category: "Level",
+      severity: "Peringatan",
+      location: "Gedung B · Tangki Utama",
+      building: "Gedung B",
+      time: "32 mnt lalu · 09:28",
+      group: "Hari Ini",
+      isRead: false,
+      isResolved: false,
+      icon: "trending-down",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-600",
+      badgeBg: "bg-amber-100",
+      badgeColor: "text-amber-600",
+      description: "Sensor level mendeteksi volume penampungan tandon Tower B turun ke 21%. Peringatan dini sebelum tandon kosong.",
+      recommendation: "Buka solenoid supply inlet dari booster transfer utama dan aktifkan pengisian otomatis cadangan."
+    },
+    {
+      id: "ALM-003",
+      title: "Low Pressure — Tekanan jalur utama turun",
+      category: "Tekanan",
+      severity: "Peringatan",
+      location: "Gedung C · Jalur Distribusi 2",
+      building: "Gedung C",
+      time: "51 mnt lalu · 09:09",
+      group: "Hari Ini",
+      isRead: false,
+      isResolved: false,
+      icon: "gauge",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-600",
+      badgeBg: "bg-amber-100",
+      badgeColor: "text-amber-600",
+      description: "Pressure sensor mencatat tekanan 0.4 bar (batas normal 2.0 - 4.0 bar). Pasokan air lantai atas terganggu.",
+      recommendation: "Pastikan valve bypass tertutup dan periksa kondisi operasional pompa pendorong booster."
+    },
+    {
+      id: "ALM-004",
+      title: "High Level — Tangki hampir penuh",
+      category: "Level",
+      severity: "Normal",
+      location: "Gedung A · Tangki Cadangan",
+      building: "Gedung A",
+      time: "2 jam lalu · 08:02",
+      group: "Hari Ini",
+      isRead: true,
+      isResolved: true,
+      icon: "waves",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-400",
+      badgeBg: "bg-emerald-100",
+      badgeColor: "text-emerald-600",
+      description: "Level air tangki cadangan mencapai batas atas 95%. Katup selenoid inlet otomatis tertutup sempurna.",
+      recommendation: "Sistem katup otomatis telah menghentikan pengisian secara normal."
+    },
+    {
+      id: "ALM-005",
+      title: "Pipa Bocor — Terdeteksi zero flow saat pompa aktif",
+      category: "Pipa Bocor",
+      severity: "Kritis",
+      location: "Gedung D · Pipa Distribusi Lantai 2",
+      building: "Gedung D",
+      time: "Kemarin · 22:14",
+      group: "Kemarin",
+      isRead: true,
+      isResolved: true,
+      icon: "pipette",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-400",
+      badgeBg: "bg-emerald-100",
+      badgeColor: "text-emerald-600",
+      description: "Anomali flow meter zona timur: motor berjalan penuh namun tidak ada debit terdeteksi karena katup isolasi tertutup.",
+      recommendation: "Pipa telah diperbaiki dan diuji tekan ulang oleh tim maintenance Gedung D."
+    },
+    {
+      id: "ALM-006",
+      title: "High Pressure — Tekanan melebihi batas aman",
+      category: "Tekanan",
+      severity: "Peringatan",
+      location: "Gedung A · Jalur Distribusi 1",
+      building: "Gedung A",
+      time: "Kemarin · 17:40",
+      group: "Kemarin",
+      isRead: true,
+      isResolved: true,
+      icon: "trending-up",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-400",
+      badgeBg: "bg-emerald-100",
+      badgeColor: "text-emerald-600",
+      description: "Terjadi lonjakan tekanan sesaat (water hammer) hingga 4.8 bar saat penutupan katup cepat.",
+      recommendation: "Vessel peredam getaran telah dikalibrasi ulang untuk menahan lonjakan dinamis."
+    },
+    {
+      id: "ALM-007",
+      title: "Fail Pump — Pompa 2 tidak merespon perintah",
+      category: "Pompa",
+      severity: "Kritis",
+      location: "Gedung B · Ruang Pompa 2",
+      building: "Gedung B",
+      time: "Kemarin · 13:57",
+      group: "Kemarin",
+      isRead: true,
+      isResolved: true,
+      icon: "power-off",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-400",
+      badgeBg: "bg-emerald-100",
+      badgeColor: "text-emerald-600",
+      description: "Komunikasi Modbus RS485 mengalami time-out dari controller ESP32 ke inverter Pompa 2.",
+      recommendation: "Kabel komunikasi RS485 telah dikencangkan dan komunikasi bus kembali lancar."
+    }
+  ];
+
+  // Storage key
+  const STORAGE_KEY = 'iot_waterplant_alarms_db';
+
+  // Load from localStorage or initialize
+  function loadAlarms() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('LocalStorage error, using defaults', e);
+    }
+    return JSON.parse(JSON.stringify(INITIAL_ALARMS_JSON));
+  }
+
+  function saveAlarms(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to save to localStorage', e);
+    }
+  }
+
+  let alarms = loadAlarms();
+  let currentFilter = 'all';
+  let currentBuilding = 'all';
+  let searchQuery = '';
+  let selectedAlarmId = null;
+
+  // =========================================================================
+  // 2. RENDERING FEED & SUMMARY COUNTERS
+  // =========================================================================
+  function render() {
+    // 1. Update summary statistics
+    const activeAlarms = alarms.filter(a => !a.isResolved);
+    const criticalAlarms = alarms.filter(a => !a.isResolved && a.severity === 'Kritis');
+    const warningAlarms = alarms.filter(a => !a.isResolved && a.severity === 'Peringatan');
+    const resolvedTodayAlarms = alarms.filter(a => a.isResolved && a.group === 'Hari Ini');
+    const unreadCount = alarms.filter(a => !a.isRead).length;
+
+    document.getElementById('statActiveAlarms').textContent = activeAlarms.length;
+    document.getElementById('statCriticalAlarms').textContent = criticalAlarms.length;
+    document.getElementById('statWarningAlarms').textContent = warningAlarms.length;
+    document.getElementById('statResolvedToday').textContent = resolvedTodayAlarms.length;
+
+    // Sidebar & tab badges
+    const sidebarBadge = document.getElementById('sidebarAlarmBadge');
+    if (sidebarBadge) {
+      sidebarBadge.textContent = unreadCount;
+      sidebarBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    }
+
+    const unreadTabBadge = document.getElementById('unreadTabBadge');
+    if (unreadTabBadge) {
+      unreadTabBadge.textContent = unreadCount;
+      unreadTabBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    }
+
+    // 2. Filter alarms
+    let filtered = alarms.filter(alarm => {
+      // Filter by tab
+      if (currentFilter === 'unread' && alarm.isRead) return false;
+      if (currentFilter === 'active' && alarm.isResolved) return false;
+      if (currentFilter === 'resolved' && !alarm.isResolved) return false;
+      if (['Level', 'Tekanan', 'Pompa', 'Pipa Bocor'].includes(currentFilter) && alarm.category !== currentFilter) return false;
+
+      // Filter by building
+      if (currentBuilding !== 'all' && alarm.building !== currentBuilding) return false;
+
+      // Filter by search query
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = alarm.title.toLowerCase().includes(q);
+        const matchLocation = alarm.location.toLowerCase().includes(q);
+        const matchCategory = alarm.category.toLowerCase().includes(q);
+        if (!matchTitle && !matchLocation && !matchCategory) return false;
+      }
+
+      return true;
+    });
+
+    // 3. Render container
+    const container = document.getElementById('alarmFeedContainer');
+    container.innerHTML = '';
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+            <i data-lucide="bell-off" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-sm font-semibold text-slate-700">Tidak ada alarm yang cocok</h4>
+          <p class="text-xs text-slate-400 mt-1">Coba ubah filter atau kata kunci pencarian Anda.</p>
+          <button onclick="setFilter('all'); document.getElementById('buildingSelect').value='all'; currentBuilding='all'; searchQuery=''; render();" class="mt-4 px-3.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+            Reset Filter
+          </button>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    // Group by 'Hari Ini' and 'Kemarin'
+    const groups = ['Hari Ini', 'Kemarin'];
+    groups.forEach(grp => {
+      const inGroup = filtered.filter(a => a.group === grp);
+      if (inGroup.length === 0) return;
+
+      const groupDiv = document.createElement('div');
+      groupDiv.innerHTML = `
+        <p class="text-xs font-semibold text-slate-400 mb-2 px-1 flex items-center justify-between">
+          <span>${grp}</span>
+          <span class="font-normal text-[11px]">${inGroup.length} notifikasi</span>
+        </p>
+        <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden shadow-xs">
+          ${inGroup.map(alarm => {
+            const isResolved = alarm.isResolved;
+            const isRead = alarm.isRead;
+            
+            return `
+              <div class="flex items-start gap-3.5 p-4 transition-all duration-200 hover:bg-slate-50/70 ${isResolved ? 'opacity-60 bg-slate-50/30' : ''} ${!isRead ? 'border-l-4 border-l-blue-600 bg-blue-50/20' : 'border-l-4 border-l-transparent'}">
+                
+                <!-- Icon -->
+                <div class="w-10 h-10 rounded-xl ${isResolved ? 'bg-slate-100 text-slate-400' : alarm.iconBg + ' ' + alarm.iconColor} flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" onclick="openAlarmDetail('${alarm.id}')">
+                  <i data-lucide="${alarm.icon}" class="w-5 h-5"></i>
+                </div>
+
+                <!-- Info -->
+                <div class="min-w-0 flex-1 cursor-pointer" onclick="openAlarmDetail('${alarm.id}')">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-semibold text-slate-800 ${isResolved ? 'line-through decoration-slate-300 text-slate-500' : ''}">
+                      ${alarm.title}
+                    </p>
+                    
+                    ${isResolved ? `
+                      <span class="text-[11px] bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <i data-lucide="check" class="w-3 h-3"></i> Selesai
+                      </span>
+                    ` : `
+                      <span class="text-[11px] ${alarm.badgeBg} ${alarm.badgeColor} font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
+                        ${alarm.severity === 'Kritis' ? '<span class="w-1.5 h-1.5 rounded-full bg-rose-600 pulse-critical"></span>' : ''}
+                        ${alarm.severity}
+                      </span>
+                    `}
+
+                    ${!isRead ? `
+                      <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse" title="Belum dibaca"></span>
+                    ` : ''}
+                  </div>
+
+                  <p class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                    <span>${alarm.location}</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-400 font-mono text-[11px]">${alarm.time}</span>
+                  </p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 shrink-0">
+                  ${!isRead ? `
+                    <button onclick="markAsRead('${alarm.id}')" title="Tandai dibaca" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                  ` : ''}
+
+                  <button onclick="toggleResolveAlarm('${alarm.id}')" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+                    isResolved 
+                    ? 'text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 border-slate-200' 
+                    : 'text-blue-600 hover:text-blue-700 bg-blue-50/60 hover:bg-blue-100 border-blue-200 shadow-2xs'
+                  }">
+                    ${isResolved ? 'Buka kembali' : 'Tandai selesai'}
+                  </button>
+                </div>
+
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      container.appendChild(groupDiv);
+    });
+
+    lucide.createIcons();
+  }
+
+  // =========================================================================
+  // 3. INTERACTIVE ACTIONS (Tandai Dibaca, Selesaikan, Filter, Reset)
+  // =========================================================================
+
+  // Tandai SEMUA alarm sebagai dibaca
+  function markAllAsRead() {
+    alarms.forEach(a => {
+      a.isRead = true;
+    });
+    saveAlarms(alarms);
+    render();
+    showToast('Semua alarm telah ditandai terbaca!');
+  }
+
+  // Tandai 1 alarm sebagai dibaca
+  function markAsRead(id) {
+    const item = alarms.find(a => a.id === id);
+    if (item) {
+      item.isRead = true;
+      saveAlarms(alarms);
+      render();
+      showToast('Alarm ditandai sudah dibaca');
+    }
+  }
+
+  // Toggle Selesai / Buka Kembali
+  function toggleResolveAlarm(id) {
+    const item = alarms.find(a => a.id === id);
+    if (item) {
+      item.isResolved = !item.isResolved;
+      if (item.isResolved) {
+        item.isRead = true; // Otomatis dibaca jika diselesaikan
+        showToast(`Alarm "${item.category}" ditandai selesai ✓`);
+      } else {
+        showToast(`Alarm "${item.category}" dibuka kembali`);
+      }
+      saveAlarms(alarms);
+      render();
+    }
+  }
+
+  // Filter Tabs
+  function setFilter(filterType) {
+    currentFilter = filterType;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      if (btn.dataset.filter === filterType) {
+        btn.className = 'filter-btn shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-xs transition-colors';
+      } else {
+        btn.className = 'filter-btn shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors';
+      }
+    });
+    render();
+  }
+
+  // Building Filter
+  function setBuilding(building) {
+    currentBuilding = building;
+    render();
+  }
+
+  // Search input
+  function handleSearch(val) {
+    searchQuery = val;
+    render();
+  }
+
+  // Reset to initial dummy data
+  function resetToInitialData() {
+    alarms = JSON.parse(JSON.stringify(INITIAL_ALARMS_JSON));
+    saveAlarms(alarms);
+    currentFilter = 'all';
+    currentBuilding = 'all';
+    searchQuery = '';
+    document.getElementById('buildingSelect').value = 'all';
+    document.getElementById('topSearchInput').value = '';
+    setFilter('all');
+    render();
+    showToast('Data dummy alarm berhasil di-reset ke awal!');
+  }
+
+  // =========================================================================
+  // 4. MODAL DETAIL ALARM
+  // =========================================================================
+  const modalEl = document.getElementById('alarmDetailModal');
+  const backdropEl = document.getElementById('alarmModalBackdrop');
+  const containerEl = document.getElementById('alarmModalContainer');
+
+  function openAlarmDetail(id) {
+    const item = alarms.find(a => a.id === id);
+    if (!item) return;
+
+    selectedAlarmId = id;
+
+    // Otomatis tandai dibaca saat dilihat detailnya
+    if (!item.isRead) {
+      item.isRead = true;
+      saveAlarms(alarms);
+    }
+
+    document.getElementById('modalAlarmTitle').textContent = item.title;
+    document.getElementById('modalAlarmLocation').textContent = item.location;
+    document.getElementById('modalAlarmSeverity').textContent = item.severity;
+    document.getElementById('modalAlarmSeverity').className = `font-bold text-xs ${item.severity === 'Kritis' ? 'text-rose-600' : (item.severity === 'Peringatan' ? 'text-amber-600' : 'text-slate-600')}`;
+    document.getElementById('modalAlarmTime').textContent = item.time;
+    document.getElementById('modalAlarmDesc').textContent = item.description;
+    document.getElementById('modalAlarmRecommendation').textContent = item.recommendation;
+
+    // Button state
+    const btnResolve = document.getElementById('modalBtnToggleResolve');
+    if (item.isResolved) {
+      btnResolve.textContent = 'Buka Kembali Alarm';
+      btnResolve.className = 'text-xs font-semibold px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors';
+    } else {
+      btnResolve.textContent = 'Selesaikan Alarm';
+      btnResolve.className = 'text-xs font-semibold px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors';
+    }
+
+    // Modal show animation
+    modalEl.classList.remove('opacity-0', 'pointer-events-none');
+    backdropEl.classList.remove('opacity-0');
+    containerEl.classList.remove('opacity-0', 'scale-95');
+    containerEl.classList.add('opacity-100', 'scale-100');
+
+    lucide.createIcons();
+    render();
+  }
+
+  function closeAlarmModal() {
+    modalEl.classList.add('opacity-0', 'pointer-events-none');
+    backdropEl.classList.add('opacity-0');
+    containerEl.classList.remove('opacity-100', 'scale-100');
+    containerEl.classList.add('opacity-0', 'scale-95');
+  }
+
+  function handleModalToggleResolve() {
+    if (selectedAlarmId) {
+      toggleResolveAlarm(selectedAlarmId);
+      closeAlarmModal();
+    }
+  }
+
+  function handleModalToggleRead() {
+    if (selectedAlarmId) {
+      markAsRead(selectedAlarmId);
+      closeAlarmModal();
+    }
+  }
+
+  // Toast feedback
+  let toastTimer = null;
+  function showToast(msg) {
+    const toast = document.getElementById('toastNotification');
+    const msgEl = document.getElementById('toastMessage');
+    if (!toast || !msgEl) return;
+
+    msgEl.textContent = msg;
+    toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+    }, 2800);
+  }
+
+  // Sidebar mobile toggle
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('backdrop');
+  const openBtn = document.getElementById('openSidebar');
+  const closeBtn = document.getElementById('closeSidebar');
+
+  function openSidebar() {
+    sidebar.classList.remove('-translate-x-full');
+    backdrop.classList.remove('hidden');
+  }
+  function closeSidebar() {
+    sidebar.classList.add('-translate-x-full');
+    backdrop.classList.add('hidden');
+  }
+  if (openBtn) openBtn.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+  // Close modal on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modalEl.classList.contains('pointer-events-none')) {
+      closeAlarmModal();
+    }
+  });
+
+  // Initial render on page load
+  render();
+</script>
+
+</body>
+</html>
