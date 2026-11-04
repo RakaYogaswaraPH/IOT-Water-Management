@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WaterPlant Monitoring — Beranda</title>
+<title>IOT Waterplant Monitoring — Beranda</title>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -14,7 +14,7 @@
   html {
     scroll-behavior: smooth;
   }
-  /* Hide scrollbar in all browsers while keeping scrollable */
+  /* Sembunyikan scrollbar di seluruh browser tapi scroll tetap berfungsi */
   ::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -25,37 +25,29 @@
     scrollbar-width: none !important;
   }
 
-  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-  /* ---- Tank (volume) visual ---- */
-  .tank-shell { width: 3.5rem; height: 5.5rem; border-radius: 0.9rem; }
-  .tank-fill { position: absolute; left: 0; right: 0; bottom: 0; transition: height 900ms cubic-bezier(.4,0,.2,1); }
-  .tank-fill::before {
-    content: ""; position: absolute; top: -3px; left: 0; right: 0; height: 6px;
-    background: rgba(255,255,255,.45); border-radius: 999px; filter: blur(0.5px);
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
-  .tank-shimmer { animation: shimmer 3.2s ease-in-out infinite; }
-  @keyframes shimmer { 0%,100% { opacity:.55; } 50% { opacity:1; } }
-
-  /* ---- Gauge (pressure speedometer) ---- */
-  .gauge-box { width: 116px; height: 58px; position: relative; overflow: hidden; margin: 0 auto; }
-  .gauge-face { position: absolute; top: 0; left: 0; width: 116px; height: 116px; border-radius: 50%; }
-  .gauge-needle {
-    position: absolute; left: 50%; bottom: 0; width: 3px; height: 48px;
-    background: #334155; border-radius: 999px; transform-origin: bottom center;
-    transition: transform 900ms cubic-bezier(.4,0,.2,1);
-  }
-  .gauge-pivot {
-    position: absolute; left: 50%; bottom: -5px; width: 11px; height: 11px;
-    margin-left: -5.5px; border-radius: 50%; background: #334155;
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
   }
 
-  /* ---- Accordion (microcontroller -> flow meter) animation ---- */
+  /* Radial dial gauge (Blynk Style) */
+  .radial-gauge {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+  }
+  .radial-circle {
+    transform: rotate(-90deg);
+  }
+
+  /* Microcontroller accordion */
   .accordion-content {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: grid-template-rows 250ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .accordion-content.is-open {
     grid-template-rows: 1fr;
@@ -64,18 +56,7 @@
     overflow: hidden;
   }
 
-  /* ---- Custom scrollbar for modal (hidden visually, remains scrollable) ---- */
-  .custom-scrollbar {
-    -ms-overflow-style: none !important;
-    scrollbar-width: none !important;
-  }
-  .custom-scrollbar::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-
-  /* ---- Modal transitions ---- */
+  /* Modal animation */
   #waterplantModal.modal-active {
     opacity: 1;
     pointer-events: auto;
@@ -87,207 +68,226 @@
     opacity: 1;
     transform: scale(1) translateY(0);
   }
-
-  /* Live pulse badge */
-  @keyframes live-pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-  }
-  .pulse-live {
-    animation: live-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-  }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
-
-<!-- Mobile sidebar backdrop -->
-<div id="backdrop" class="hidden fixed inset-0 bg-slate-900/40 z-30 lg:hidden"></div>
+<body class="bg-slate-50/70 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
 
 <div class="flex min-h-screen">
 
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col -translate-x-full transition-transform duration-200 lg:translate-x-0 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:shrink-0">
-    <div class="flex items-center gap-3 px-5 h-16 border-b border-slate-200">
-      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
-        <i data-lucide="droplets" class="w-5 h-5 text-white"></i>
+  <!-- ======================================================================= -->
+  <!-- DESKTOP / TABLET SIDEBAR                                                -->
+  <!-- ======================================================================= -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 sticky top-0 h-screen shrink-0 z-30">
+    <!-- Brand / Logo (Blynk Minimalist Style) -->
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
+      <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-sm shadow-sky-500/25">
+        <i data-lucide="droplet" class="w-5 h-5"></i>
       </div>
-      <div class="leading-tight">
-        <p class="font-semibold text-slate-900 text-sm">WaterPlant Monitoring</p>
-        <p class="text-xs text-slate-400">IoT Water Management</p>
+      <div>
+        <p class="font-bold text-slate-900 text-sm tracking-tight">IOT Waterplant</p>
+        <p class="text-[11px] text-slate-400 font-medium">Blynk Dashboard</p>
       </div>
-      <button id="closeSidebar" class="ml-auto lg:hidden text-slate-400 hover:text-slate-600 p-1">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-      <p class="px-3 text-xs font-medium text-slate-400 mb-2">Menu Utama</p>
+    <!-- Navigation Menu -->
+    <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <p class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">Menu</p>
 
-      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-600 border-l-2 border-blue-600 font-medium text-sm transition-colors">
-        <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+      <a href="index.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-sky-50 text-sky-600 font-semibold text-sm transition-colors">
+        <i data-lucide="layout-grid" class="w-4.5 h-4.5"></i>
         Beranda
       </a>
-      <a href="alarm.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
-        <i data-lucide="bell-ring" class="w-4.5 h-4.5"></i>
-        Alarm
-        <span class="ml-auto text-xs bg-rose-100 text-rose-600 font-semibold px-1.5 py-0.5 rounded-md">3</span>
-      </a>
-      <a href="control.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
-        <i data-lucide="settings-2" class="w-4.5 h-4.5"></i>
+      <a href="control.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="power" class="w-4.5 h-4.5"></i>
         Kontrol Pompa
       </a>
-      <a href="log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
+      <a href="alarm.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+        Alarm
+        <span class="ml-auto text-xs bg-rose-50 text-rose-600 font-semibold px-2 py-0.5 rounded-full border border-rose-200/60">3</span>
+      </a>
+      <a href="log.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
         <i data-lucide="history" class="w-4.5 h-4.5"></i>
         Log Aktivitas
       </a>
-      <a href="report.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent transition-colors">
+      <a href="report.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
         <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
         Laporan Harian
       </a>
     </nav>
 
-    <div class="p-3 border-t border-slate-200">
-      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm transition-colors">
-        <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
-        Keluar
+    <!-- User Profile & System Status -->
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center">
+          OP
+        </div>
+        <div class="leading-tight">
+          <p class="text-xs font-semibold text-slate-800">Operator</p>
+          <p class="text-[10px] text-emerald-600 flex items-center gap-1 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+          </p>
+        </div>
+      </div>
+      <a href="index.html" title="Refresh" class="text-slate-400 hover:text-slate-600 p-1.5">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       </a>
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- ======================================================================= -->
+  <!-- MAIN WORKSPACE                                                          -->
+  <!-- ======================================================================= -->
   <div class="flex-1 min-w-0 flex flex-col">
 
-    <!-- TOP BAR -->
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-20">
-      <button id="openSidebar" class="lg:hidden text-slate-500 hover:text-slate-700 p-1">
-        <i data-lucide="menu" class="w-6 h-6"></i>
-      </button>
-
-      <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full max-w-xs text-slate-400 focus-within:border-blue-500 focus-within:bg-white transition-all">
-        <i data-lucide="search" class="w-4 h-4"></i>
-        <input type="text" placeholder="Cari waterplant, microcontroller, sensor..." class="bg-transparent outline-none text-sm text-slate-600 placeholder:text-slate-400 w-full">
+    <!-- Top App Bar (Clean Blynk Style) -->
+    <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
+      <!-- Mobile brand title -->
+      <div class="flex items-center gap-2.5 md:hidden">
+        <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white">
+          <i data-lucide="droplet" class="w-4.5 h-4.5"></i>
+        </div>
+        <span class="font-bold text-slate-900 text-sm tracking-tight">IOT Waterplant</span>
       </div>
 
-      <button class="sm:hidden ml-auto text-slate-500">
-        <i data-lucide="search" class="w-5 h-5"></i>
-      </button>
+      <!-- Desktop page title -->
+      <div class="hidden md:block">
+        <h1 class="text-base font-bold text-slate-900">Dashboard Monitoring</h1>
+        <p class="text-xs text-slate-400">Ringkasan kondisi waterplant, microcontroller, dan sensor</p>
+      </div>
 
-      <div class="hidden sm:block flex-1"></div>
-
-      <div class="flex items-center gap-4 ml-auto sm:ml-0 shrink-0">
-        <div class="flex items-center gap-2">
-          <img src="https://i.pravatar.cc/64?img=12" class="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/20" alt="Admin">
-          <div class="hidden md:block leading-tight">
-            <p class="text-sm font-medium text-slate-700">Administrator</p>
-            <p class="text-xs text-slate-400">Operator</p>
-          </div>
-          <i data-lucide="chevron-down" class="hidden md:block w-4 h-4 text-slate-400"></i>
-        </div>
+      <!-- Right actions -->
+      <div class="flex items-center gap-2">
+        <span class="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Broker MQTT Aktif
+        </span>
+        <button onclick="location.reload()" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-600 flex items-center justify-center transition-colors" title="Perbarui">
+          <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+        </button>
       </div>
     </header>
 
-    <!-- CONTENT -->
-    <main class="flex-1 p-4 sm:p-6 space-y-6">
+    <!-- Scrollable Content with pb-24 for mobile bottom nav -->
+    <main class="flex-1 p-4 sm:p-6 pb-24 md:pb-8 space-y-6 max-w-7xl mx-auto w-full">
 
-      <!-- Page heading -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Beranda</h1>
-          <p class="text-sm text-slate-400 mt-0.5">Pantau debit air, microcontroller, dan sensor waterplant secara real-time</p>
+      <!-- =================================================================== -->
+      <!-- 1. BLYNK WIDGET TILES (KPI Summary)                                 -->
+      <!-- =================================================================== -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- Tile 1: Level Rata-rata -->
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Level Tangki</span>
+            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+          </div>
+          <div class="my-2">
+            <p class="text-2xl sm:text-3xl font-bold font-mono text-slate-900">78<span class="text-sm text-slate-400 font-normal">%</span></p>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-sky-500 h-full rounded-full" style="width: 78%"></div>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <a href="#waterplant-section" class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all">
-            <i data-lucide="layers" class="w-4 h-4 text-blue-600"></i>
-            Semua Waterplant
+
+        <!-- Tile 2: Debit Hari Ini -->
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Debit Hari Ini</span>
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-500"></i>
+          </div>
+          <div class="my-2">
+            <p class="text-2xl sm:text-3xl font-bold font-mono text-slate-900">12.480<span class="text-sm text-slate-400 font-normal">L</span></p>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">+4.2% dari kemarin</p>
+        </div>
+
+        <!-- Tile 3: Pompa Berjalan -->
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Pompa Aktif</span>
+            <i data-lucide="power" class="w-3.5 h-3.5 text-emerald-500"></i>
+          </div>
+          <div class="my-2">
+            <p class="text-2xl sm:text-3xl font-bold font-mono text-slate-900">5<span class="text-sm text-slate-400 font-normal">/8 Unit</span></p>
+          </div>
+          <p class="text-[11px] text-emerald-600 font-medium">4 Otomatis · 1 Manual</p>
+        </div>
+
+        <!-- Tile 4: Alarm Aktif -->
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Alarm Sistem</span>
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+          </div>
+          <div class="my-2">
+            <p class="text-2xl sm:text-3xl font-bold font-mono text-rose-600">3<span class="text-sm text-slate-400 font-normal"> Insiden</span></p>
+          </div>
+          <a href="alarm.html" class="text-[11px] text-sky-600 hover:text-sky-700 font-medium flex items-center gap-1">
+            Lihat semua alarm <i data-lucide="chevron-right" class="w-3 h-3"></i>
           </a>
-          <button onclick="location.reload()" class="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-600/20 active:scale-95 transition-all">
-            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">Perbarui</span>
-          </button>
         </div>
+
       </div>
 
-      <!-- KPI CARDS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <!-- =================================================================== -->
+      <!-- 2. BLYNK RADIAL GAUGE & OVERVIEW WIDGETS                            -->
+      <!-- =================================================================== -->
+      <div class="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Tekanan & Penampungan Utama</h2>
+            <p class="text-xs text-slate-400">Ringkasan transduser jalur suplai pusat</p>
+          </div>
+          <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-600 border border-sky-200/60">
+            Real-Time
+          </span>
+        </div>
 
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Level Air Rata-rata</p>
-            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-              <i data-lucide="waves" class="w-4.5 h-4.5 text-blue-600"></i>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          
+          <!-- Radial Gauge Tekanan (Blynk circular style) -->
+          <div class="flex flex-col items-center justify-center p-3">
+            <div class="radial-gauge">
+              <svg class="w-full h-full radial-circle" viewBox="0 0 100 100">
+                <!-- Background track -->
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f5f9" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="66" stroke-linecap="round"></circle>
+                <!-- Active bar (2.5 bar / 6 bar max = 41.6%) -->
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#0ea5e9" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="154" stroke-linecap="round"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-2xl font-bold font-mono text-slate-900">2.5</span>
+                <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">BAR</span>
+              </div>
             </div>
+            <p class="text-xs text-slate-600 font-medium mt-2">Tekanan Jalur Utama</p>
+            <p class="text-[11px] text-slate-400">Standar aman: 2.0 – 4.0 bar</p>
           </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">78<span class="text-base text-slate-400">%</span></p>
-          <div class="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
-            <div class="h-full bg-blue-600 rounded-full" style="width:78%"></div>
-          </div>
-          <p class="text-xs text-slate-400 mt-2">4 waterplant terpantau</p>
-        </div>
 
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Alarm Aktif</p>
-            <div class="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center">
-              <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-rose-600"></i>
+          <!-- Volume Level Bar -->
+          <div class="flex flex-col justify-center p-3 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-500 font-medium">Kapasitas Tandon Pusat</span>
+              <span class="font-mono font-bold text-slate-900">78%</span>
             </div>
-          </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">3</p>
-          <p class="text-xs text-slate-500 mt-3">2 Level Rendah · 1 Pompa Gagal</p>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Pompa Berjalan</p>
-            <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <i data-lucide="zap" class="w-4.5 h-4.5 text-emerald-600"></i>
+            <div class="h-3 bg-slate-100 rounded-full overflow-hidden p-0.5">
+              <div class="h-full bg-sky-500 rounded-full" style="width: 78%"></div>
             </div>
-          </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">5<span class="text-base text-slate-400">/8</span></p>
-          <p class="text-xs text-slate-500 mt-3">Auto: 4 · Manual: 1</p>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Debit Air Hari Ini</p>
-            <div class="w-9 h-9 rounded-lg bg-sky-50 flex items-center justify-center">
-              <i data-lucide="activity" class="w-4.5 h-4.5 text-sky-600"></i>
-            </div>
-          </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">12.480<span class="text-base text-slate-400">L</span></p>
-          <p class="text-xs text-emerald-600 mt-3 flex items-center gap-1">
-            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> 4.2% dari kemarin
-          </p>
-        </div>
-      </div>
-
-      <!-- RINGKASAN VISUAL: gauge tekanan, tangki volume, status pompa -->
-      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-        <div class="mb-1">
-          <h2 class="text-base font-semibold text-slate-900">Ringkasan Visual Sistem</h2>
-          <p class="text-xs text-slate-400">Kondisi operasional seluruh waterplant saat ini</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
-
-          <!-- Gauge tekanan rata-rata -->
-          <div class="pt-4 md:pt-2 md:pr-6 flex flex-col items-center">
-            <p class="text-sm text-slate-500 mb-1 self-start md:self-center">Tekanan Jalur Utama</p>
-            <div class="gauge" data-value="2.5" data-min="0" data-max="6"></div>
-            <p class="text-xs text-slate-400 mt-1">Normal beroperasi 2–4 bar</p>
-          </div>
-
-          <!-- Tangki volume rata-rata -->
-          <div class="pt-4 md:pt-2 md:px-6 flex flex-col items-center">
-            <p class="text-sm text-slate-500 mb-2 self-start md:self-center">Volume Penampungan</p>
-            <div class="flex items-end gap-4">
-              <div class="tank" data-percent="78" data-color-from="#3b82f6" data-color-to="#1d4ed8" data-label="Rata-rata"></div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-500 pt-1">
+              <div>
+                <span class="text-slate-400 block">Total Kapasitas:</span>
+                <span class="font-mono font-semibold text-slate-700">40.000 L</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block">Tersedia Saat Ini:</span>
+                <span class="font-mono font-semibold text-slate-700">31.200 L</span>
+              </div>
             </div>
           </div>
 
-          <!-- Distribusi status pompa -->
-          <div class="pt-4 md:pt-2 md:pl-6">
-            <p class="text-sm text-slate-500 mb-2 text-center md:text-left">Distribusi Status Pompa</p>
-            <div class="h-32">
+          <!-- Distribusi Status Pompa (Donut) -->
+          <div class="flex flex-col items-center p-2">
+            <p class="text-xs text-slate-600 font-medium mb-1">Status 8 Pompa</p>
+            <div class="h-28 w-full max-w-[200px]">
               <canvas id="pumpStatusChart"></canvas>
             </div>
           </div>
@@ -295,236 +295,180 @@
         </div>
       </div>
 
-      <!-- WATERPLANT CARDS -->
-      <section id="waterplant-section" class="scroll-mt-20">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+      <!-- =================================================================== -->
+      <!-- 3. WATERPLANT TILES (Blynk Device Cards)                            -->
+      <!-- =================================================================== -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
           <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-base font-semibold text-slate-900">Status Waterplant</h2>
-              <span class="inline-flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/60">
-                <i data-lucide="mouse-pointer-click" class="w-3 h-3 text-blue-500"></i> Klik untuk Buka Perangkat
-              </span>
-            </div>
-            <p class="text-xs text-slate-400 mt-0.5">Pilih salah satu waterplant di bawah untuk melihat Microcontroller & Sensor Flow Meter yang terhubung</p>
+            <h2 class="text-sm font-bold text-slate-900">Daftar Waterplant</h2>
+            <p class="text-xs text-slate-400">Pilih waterplant untuk melihat microcontroller & sensor flow meter</p>
           </div>
-          <span class="text-xs text-slate-400 shrink-0">4 Waterplant Aktif</span>
+          <span class="text-xs font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-lg">4 Waterplant</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
 
           <!-- Waterplant A -->
-          <div onclick="openWaterplantModal('A')" class="group bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-4 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative flex flex-col justify-between">
+          <div onclick="openWaterplantModal('A')" class="bg-white border border-slate-200/80 hover:border-sky-400 rounded-2xl p-4 cursor-pointer shadow-xs hover:shadow-md transition-all group flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-live"></span>
-                  <div>
-                    <p class="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">Waterplant A</p>
-                    <p class="text-[11px] text-slate-400">Gedung A (Utama)</p>
-                  </div>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <p class="font-bold text-slate-900 text-sm group-hover:text-sky-600 transition-colors">Waterplant A</p>
                 </div>
-                <span class="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">Normal</span>
+                <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Normal</span>
               </div>
+              <p class="text-xs text-slate-400">Gedung Utama</p>
 
-              <div class="grid grid-cols-2 gap-2 items-end py-1">
-                <div class="flex flex-col items-center">
-                  <div class="tank" data-percent="82" data-color-from="#34d399" data-color-to="#059669"></div>
-                  <p class="text-xs text-slate-400 mt-1">Level Tangki</p>
+              <div class="my-4 grid grid-cols-2 gap-2 text-center bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Debit</span>
+                  <span class="text-sm font-bold font-mono text-sky-600">4.1 L/m</span>
                 </div>
-                <div class="flex flex-col items-center">
-                  <div class="gauge" data-value="3.2" data-min="0" data-max="6"></div>
-                  <p class="text-xs text-slate-400 -mt-1">Tekanan</p>
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Tekanan</span>
+                  <span class="text-sm font-bold font-mono text-slate-800">3.2 bar</span>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between text-sm mt-3 pt-3 border-t border-slate-100">
-                <span class="text-slate-400 text-xs">Debit Aliran</span>
-                <span class="font-mono font-semibold text-blue-600 text-sm">4.1 L/mnt</span>
-              </div>
-              <div class="flex items-center justify-between mt-2.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">Auto</span>
-                  <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Alternate</span>
-                </div>
-                <span class="text-[11px] text-slate-400 font-mono">2 MCU</span>
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Tangki: <strong class="text-slate-800 font-mono">82%</strong></span>
+                <span class="text-slate-400 font-mono">2 MCU</span>
               </div>
             </div>
 
-            <div class="mt-3 pt-2.5 border-t border-dashed border-slate-200 flex items-center justify-between text-xs text-blue-600 font-medium group-hover:text-blue-700">
-              <span class="flex items-center gap-1">
-                <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Perangkat & Sensor
-              </span>
-              <span class="flex items-center gap-0.5 text-[11px]">
-                Lihat Detail <i data-lucide="arrow-right" class="w-3 h-3 group-hover:translate-x-1 transition-transform"></i>
-              </span>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+              <span>Buka Perangkat</span>
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </div>
           </div>
 
           <!-- Waterplant B -->
-          <div onclick="openWaterplantModal('B')" class="group bg-white border border-slate-200 hover:border-amber-500 rounded-xl p-4 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative flex flex-col justify-between">
+          <div onclick="openWaterplantModal('B')" class="bg-white border border-slate-200/80 hover:border-amber-400 rounded-2xl p-4 cursor-pointer shadow-xs hover:shadow-md transition-all group flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                  <div>
-                    <p class="font-semibold text-slate-900 text-sm group-hover:text-amber-600 transition-colors">Waterplant B</p>
-                    <p class="text-[11px] text-slate-400">Gedung B (Tower 1)</p>
-                  </div>
+                  <p class="font-bold text-slate-900 text-sm group-hover:text-amber-600 transition-colors">Waterplant B</p>
                 </div>
-                <span class="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">Level Rendah</span>
+                <span class="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Level Rendah</span>
               </div>
+              <p class="text-xs text-slate-400">Gedung B (Tower 1)</p>
 
-              <div class="grid grid-cols-2 gap-2 items-end py-1">
-                <div class="flex flex-col items-center">
-                  <div class="tank" data-percent="21" data-color-from="#fbbf24" data-color-to="#d97706"></div>
-                  <p class="text-xs text-slate-400 mt-1">Level Tangki</p>
+              <div class="my-4 grid grid-cols-2 gap-2 text-center bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Debit</span>
+                  <span class="text-sm font-bold font-mono text-amber-600">3.6 L/m</span>
                 </div>
-                <div class="flex flex-col items-center">
-                  <div class="gauge" data-value="2.8" data-min="0" data-max="6"></div>
-                  <p class="text-xs text-slate-400 -mt-1">Tekanan</p>
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Tekanan</span>
+                  <span class="text-sm font-bold font-mono text-slate-800">2.8 bar</span>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between text-sm mt-3 pt-3 border-t border-slate-100">
-                <span class="text-slate-400 text-xs">Debit Aliran</span>
-                <span class="font-mono font-semibold text-amber-600 text-sm">3.6 L/mnt</span>
-              </div>
-              <div class="flex items-center justify-between mt-2.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">Auto</span>
-                  <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Backup</span>
-                </div>
-                <span class="text-[11px] text-slate-400 font-mono">1 MCU</span>
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Tangki: <strong class="text-amber-600 font-mono">21%</strong></span>
+                <span class="text-slate-400 font-mono">1 MCU</span>
               </div>
             </div>
 
-            <div class="mt-3 pt-2.5 border-t border-dashed border-slate-200 flex items-center justify-between text-xs text-amber-600 font-medium group-hover:text-amber-700">
-              <span class="flex items-center gap-1">
-                <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Perangkat & Sensor
-              </span>
-              <span class="flex items-center gap-0.5 text-[11px]">
-                Lihat Detail <i data-lucide="arrow-right" class="w-3 h-3 group-hover:translate-x-1 transition-transform"></i>
-              </span>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-amber-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+              <span>Buka Perangkat</span>
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </div>
           </div>
 
           <!-- Waterplant C -->
-          <div onclick="openWaterplantModal('C')" class="group bg-white border border-slate-200 hover:border-rose-500 rounded-xl p-4 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative flex flex-col justify-between">
+          <div onclick="openWaterplantModal('C')" class="bg-white border border-slate-200/80 hover:border-rose-400 rounded-2xl p-4 cursor-pointer shadow-xs hover:shadow-md transition-all group flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                  <div>
-                    <p class="font-semibold text-slate-900 text-sm group-hover:text-rose-600 transition-colors">Waterplant C</p>
-                    <p class="text-[11px] text-slate-400">Gedung C (Treatment)</p>
-                  </div>
+                  <p class="font-bold text-slate-900 text-sm group-hover:text-rose-600 transition-colors">Waterplant C</p>
                 </div>
-                <span class="text-xs font-medium text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">Pompa Gagal</span>
+                <span class="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">Pompa Trip</span>
               </div>
+              <p class="text-xs text-slate-400">Gedung C (Treatment)</p>
 
-              <div class="grid grid-cols-2 gap-2 items-end py-1">
-                <div class="flex flex-col items-center">
-                  <div class="tank" data-percent="65" data-color-from="#60a5fa" data-color-to="#2563eb"></div>
-                  <p class="text-xs text-slate-400 mt-1">Level Tangki</p>
+              <div class="my-4 grid grid-cols-2 gap-2 text-center bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Debit</span>
+                  <span class="text-sm font-bold font-mono text-rose-600">0.0 L/m</span>
                 </div>
-                <div class="flex flex-col items-center">
-                  <div class="gauge" data-value="0.4" data-min="0" data-max="6"></div>
-                  <p class="text-xs text-slate-400 -mt-1">Tekanan</p>
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Tekanan</span>
+                  <span class="text-sm font-bold font-mono text-slate-800">0.4 bar</span>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between text-sm mt-3 pt-3 border-t border-slate-100">
-                <span class="text-slate-400 text-xs">Debit Aliran</span>
-                <span class="font-mono font-semibold text-rose-600 text-sm">0.0 L/mnt</span>
-              </div>
-              <div class="flex items-center justify-between mt-2.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">Manual</span>
-                  <span class="text-[11px] bg-rose-50 text-rose-600 px-2 py-0.5 rounded">Berhenti</span>
-                </div>
-                <span class="text-[11px] text-slate-400 font-mono">1 MCU</span>
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Tangki: <strong class="text-slate-800 font-mono">65%</strong></span>
+                <span class="text-slate-400 font-mono">1 MCU</span>
               </div>
             </div>
 
-            <div class="mt-3 pt-2.5 border-t border-dashed border-slate-200 flex items-center justify-between text-xs text-rose-600 font-medium group-hover:text-rose-700">
-              <span class="flex items-center gap-1">
-                <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Perangkat & Sensor
-              </span>
-              <span class="flex items-center gap-0.5 text-[11px]">
-                Lihat Detail <i data-lucide="arrow-right" class="w-3 h-3 group-hover:translate-x-1 transition-transform"></i>
-              </span>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-rose-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+              <span>Buka Perangkat</span>
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </div>
           </div>
 
           <!-- Waterplant D -->
-          <div onclick="openWaterplantModal('D')" class="group bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-4 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative flex flex-col justify-between">
+          <div onclick="openWaterplantModal('D')" class="bg-white border border-slate-200/80 hover:border-emerald-400 rounded-2xl p-4 cursor-pointer shadow-xs hover:shadow-md transition-all group flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-live"></span>
-                  <div>
-                    <p class="font-semibold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">Waterplant D</p>
-                    <p class="text-[11px] text-slate-400">Gedung D (Distribusi)</p>
-                  </div>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <p class="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">Waterplant D</p>
                 </div>
-                <span class="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">Normal</span>
+                <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Normal</span>
               </div>
+              <p class="text-xs text-slate-400">Gedung D (Distribusi)</p>
 
-              <div class="grid grid-cols-2 gap-2 items-end py-1">
-                <div class="flex flex-col items-center">
-                  <div class="tank" data-percent="90" data-color-from="#34d399" data-color-to="#059669"></div>
-                  <p class="text-xs text-slate-400 mt-1">Level Tangki</p>
+              <div class="my-4 grid grid-cols-2 gap-2 text-center bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Debit</span>
+                  <span class="text-sm font-bold font-mono text-emerald-600">4.6 L/m</span>
                 </div>
-                <div class="flex flex-col items-center">
-                  <div class="gauge" data-value="3.5" data-min="0" data-max="6"></div>
-                  <p class="text-xs text-slate-400 -mt-1">Tekanan</p>
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase">Tekanan</span>
+                  <span class="text-sm font-bold font-mono text-slate-800">3.5 bar</span>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between text-sm mt-3 pt-3 border-t border-slate-100">
-                <span class="text-slate-400 text-xs">Debit Aliran</span>
-                <span class="font-mono font-semibold text-emerald-600 text-sm">4.6 L/mnt</span>
-              </div>
-              <div class="flex items-center justify-between mt-2.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">Auto</span>
-                  <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Alternate</span>
-                </div>
-                <span class="text-[11px] text-slate-400 font-mono">1 MCU</span>
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Tangki: <strong class="text-slate-800 font-mono">90%</strong></span>
+                <span class="text-slate-400 font-mono">1 MCU</span>
               </div>
             </div>
 
-            <div class="mt-3 pt-2.5 border-t border-dashed border-slate-200 flex items-center justify-between text-xs text-emerald-600 font-medium group-hover:text-emerald-700">
-              <span class="flex items-center gap-1">
-                <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Perangkat & Sensor
-              </span>
-              <span class="flex items-center gap-0.5 text-[11px]">
-                Lihat Detail <i data-lucide="arrow-right" class="w-3 h-3 group-hover:translate-x-1 transition-transform"></i>
-              </span>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+              <span>Buka Perangkat</span>
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </div>
           </div>
 
         </div>
       </section>
 
-      <!-- CHARTS SECTION (DEBIT AIR PER GEDUNG) -->
+      <!-- =================================================================== -->
+      <!-- 4. DEBIT AIR PER GEDUNG CHARTS                                      -->
+      <!-- =================================================================== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        <!-- Line Chart: Tren Debit Air per Gedung (24 Jam) -->
-        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+        
+        <!-- 24h Flow Rate Trend -->
+        <div class="lg:col-span-2 bg-white border border-slate-200/70 rounded-2xl p-5 shadow-xs">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <div class="flex items-center gap-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-blue-600 pulse-live"></div>
-                <h3 class="font-semibold text-slate-900 text-sm">Tren Debit Air per Gedung (24 Jam)</h3>
-              </div>
-              <p class="text-xs text-slate-400 mt-0.5">Laju aliran debit air (Liter/menit) per gedung secara real-time</p>
+              <h3 class="text-sm font-bold text-slate-900">Tren Debit Air per Gedung (24 Jam)</h3>
+              <p class="text-xs text-slate-400">Laju aliran real-time (Liter/menit)</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>Gedung A</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>Gedung B</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>Gedung C</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Gedung D</span>
+            <div class="flex items-center gap-3 text-xs text-slate-500 font-medium">
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-500"></span>Gedung A</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400"></span>Gedung B</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Gedung C</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Gedung D</span>
             </div>
           </div>
           <div class="h-64">
@@ -532,123 +476,17 @@
           </div>
         </div>
 
-        <!-- Bar Chart: Debit Air per Gedung Terkini -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-2">
+        <!-- Real-Time Bar Comparison -->
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-xs">
+          <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="font-semibold text-slate-900 text-sm">Debit Air per Gedung</h3>
-              <p class="text-xs text-slate-400">Laju aliran real-time saat ini</p>
+              <h3 class="text-sm font-bold text-slate-900">Debit Air Saat Ini</h3>
+              <p class="text-xs text-slate-400">Liter/menit per waterplant</p>
             </div>
-            <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-600">Live</span>
+            <span class="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-sky-50 text-sky-600">Live</span>
           </div>
           <div class="h-64">
-            <canvas id="flowChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- LOG + ALARM -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-slate-900 text-sm">Log Aktivitas Terbaru</h3>
-            <a href="log.html" class="text-sm text-blue-600 font-medium hover:underline">Lihat semua</a>
-          </div>
-          <div class="space-y-1">
-
-            <div class="flex items-center gap-3 py-2.5 border-b border-slate-50 hover:bg-slate-50/60 rounded-lg px-1 transition-colors">
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                <i data-lucide="power" class="w-4 h-4 text-emerald-600"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-slate-700 truncate">Pompa 2 dinyalakan otomatis</p>
-                <p class="text-xs text-slate-400">Waterplant A · MCU ESP32-A01</p>
-              </div>
-              <span class="text-xs text-slate-400 shrink-0 font-mono">2 mnt lalu</span>
-            </div>
-
-            <div class="flex items-center gap-3 py-2.5 border-b border-slate-50 hover:bg-slate-50/60 rounded-lg px-1 transition-colors">
-              <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
-                <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-slate-700 truncate">Pompa 1 gagal berjalan (Trip)</p>
-                <p class="text-xs text-slate-400">Waterplant C · MCU ESP32-C01</p>
-              </div>
-              <span class="text-xs text-slate-400 shrink-0 font-mono">14 mnt lalu</span>
-            </div>
-
-            <div class="flex items-center gap-3 py-2.5 border-b border-slate-50 hover:bg-slate-50/60 rounded-lg px-1 transition-colors">
-              <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-                <i data-lucide="droplet" class="w-4 h-4 text-amber-600"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-slate-700 truncate">Level tangki di bawah 25% (21%)</p>
-                <p class="text-xs text-slate-400">Waterplant B · MCU ESP32-B01</p>
-              </div>
-              <span class="text-xs text-slate-400 shrink-0 font-mono">32 mnt lalu</span>
-            </div>
-
-            <div class="flex items-center gap-3 py-2.5 border-b border-slate-50 hover:bg-slate-50/60 rounded-lg px-1 transition-colors">
-              <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-blue-600"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-slate-700 truncate">Mode pompa diubah ke Manual</p>
-                <p class="text-xs text-slate-400">Waterplant C · oleh Administrator</p>
-              </div>
-              <span class="text-xs text-slate-400 shrink-0 font-mono">1 jam lalu</span>
-            </div>
-
-            <div class="flex items-center gap-3 py-2.5 hover:bg-slate-50/60 rounded-lg px-1 transition-colors">
-              <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
-                <i data-lucide="file-check-2" class="w-4 h-4 text-slate-500"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-slate-700 truncate">Laporan harian debit & sensor dibuat</p>
-                <p class="text-xs text-slate-400">Semua Waterplant</p>
-              </div>
-              <span class="text-xs text-slate-400 shrink-0 font-mono">3 jam lalu</span>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-slate-900 text-sm">Alarm Aktif</h3>
-            <span class="text-xs bg-rose-100 text-rose-600 font-semibold px-1.5 py-0.5 rounded-md">3</span>
-          </div>
-          <div class="space-y-3">
-
-            <div class="flex items-start gap-3 p-3 rounded-lg bg-rose-50/60 border border-rose-100">
-              <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600 mt-0.5 shrink-0"></i>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-slate-800">Pompa Gagal</p>
-                <p class="text-xs text-slate-500">Waterplant C · Pompa 1 (Aliran 0.0 L/mnt)</p>
-              </div>
-              <button onclick="openWaterplantModal('C')" class="text-xs text-blue-600 hover:text-blue-700 font-medium shrink-0">Periksa</button>
-            </div>
-
-            <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50/60 border border-amber-100">
-              <i data-lucide="trending-down" class="w-4 h-4 text-amber-600 mt-0.5 shrink-0"></i>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-slate-800">Level Rendah</p>
-                <p class="text-xs text-slate-500">Waterplant B · Tangki Utama (21%)</p>
-              </div>
-              <button onclick="openWaterplantModal('B')" class="text-xs text-blue-600 hover:text-blue-700 font-medium shrink-0">Periksa</button>
-            </div>
-
-            <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50/60 border border-amber-100">
-              <i data-lucide="gauge" class="w-4 h-4 text-amber-600 mt-0.5 shrink-0"></i>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-slate-800">Tekanan Rendah</p>
-                <p class="text-xs text-slate-500">Waterplant C · Jalur Utama (0.4 bar)</p>
-              </div>
-              <button onclick="openWaterplantModal('C')" class="text-xs text-blue-600 hover:text-blue-700 font-medium shrink-0">Periksa</button>
-            </div>
-
+            <canvas id="flowBarChart"></canvas>
           </div>
         </div>
 
@@ -659,196 +497,130 @@
 </div>
 
 <!-- ========================================================================= -->
+<!-- BLYNK MOBILE BOTTOM NAVIGATION (Khusus Mobile)                            -->
+<!-- ========================================================================= -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 flex items-center justify-around shadow-lg">
+  <a href="index.html" class="flex flex-col items-center gap-1 py-1 px-3 text-sky-600 font-semibold transition-colors">
+    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+    <span class="text-[10px]">Beranda</span>
+  </a>
+  <a href="control.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="power" class="w-5 h-5"></i>
+    <span class="text-[10px]">Kontrol</span>
+  </a>
+  <a href="alarm.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors relative">
+    <i data-lucide="bell" class="w-5 h-5"></i>
+    <span class="text-[10px]">Alarm</span>
+    <span class="absolute top-0.5 right-2.5 w-2 h-2 rounded-full bg-rose-500"></span>
+  </a>
+  <a href="log.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="history" class="w-5 h-5"></i>
+    <span class="text-[10px]">Log</span>
+  </a>
+  <a href="report.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="file-text" class="w-5 h-5"></i>
+    <span class="text-[10px]">Laporan</span>
+  </a>
+</nav>
+
+<!-- ========================================================================= -->
 <!-- MODAL: DETAIL WATERPLANT -> MICROCONTROLLER -> SENSOR FLOW METER          -->
 <!-- ========================================================================= -->
 <div id="waterplantModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 opacity-0 pointer-events-none transition-all duration-300">
+  <div id="modalBackdrop" onclick="closeWaterplantModal()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
 
-  <!-- Backdrop -->
-  <div id="modalBackdrop" onclick="closeWaterplantModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-
-  <!-- Modal Container -->
-  <div id="modalContainer" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden transform scale-95 opacity-0 transition-all duration-300 z-10">
-
+  <div id="modalContainer" class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col border border-slate-100 overflow-hidden transform scale-95 opacity-0 transition-all duration-300 z-10">
+    
     <!-- Modal Header -->
-    <div class="px-5 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-          <i data-lucide="cpu" class="w-5 h-5"></i>
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 id="modalPlantTitle" class="text-base font-bold text-slate-900 leading-tight">Waterplant A</h3>
+          <span id="modalPlantStatusBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full border">Normal</span>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h3 id="modalPlantTitle" class="text-lg font-bold text-slate-900 leading-tight">Waterplant A</h3>
-            <span id="modalPlantStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full border">Normal</span>
-          </div>
-          <p id="modalPlantSubtitle" class="text-xs text-slate-500 mt-0.5">Lokasi: Gedung A · Basement Utilitas Sektor Barat</p>
-        </div>
+        <p id="modalPlantSubtitle" class="text-xs text-slate-400 mt-0.5">Gedung Utama · Basement Utilitas</p>
       </div>
-
-      <button onclick="closeWaterplantModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
-        <i data-lucide="x" class="w-5 h-5"></i>
+      <button onclick="closeWaterplantModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
 
-    <!-- Modal Overview Banner / Quick Stats -->
-    <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0 text-center">
-      <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
-        <p class="text-[11px] text-slate-400">Debit Real-Time</p>
-        <p id="modalStatFlow" class="text-sm font-bold text-blue-600 font-mono mt-0.5">4.1 L/mnt</p>
+    <!-- Quick Stats Bar -->
+    <div class="px-5 py-3 bg-slate-50/80 border-b border-slate-100 grid grid-cols-3 gap-2 shrink-0 text-center">
+      <div class="bg-white p-2 rounded-xl border border-slate-100">
+        <span class="text-[10px] text-slate-400 block uppercase">Debit Saat Ini</span>
+        <span id="modalStatFlow" class="text-xs sm:text-sm font-bold font-mono text-sky-600">4.1 L/m</span>
       </div>
-      <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
-        <p class="text-[11px] text-slate-400">Tekanan</p>
-        <p id="modalStatPressure" class="text-sm font-bold text-slate-800 font-mono mt-0.5">3.2 bar</p>
+      <div class="bg-white p-2 rounded-xl border border-slate-100">
+        <span class="text-[10px] text-slate-400 block uppercase">Tekanan</span>
+        <span id="modalStatPressure" class="text-xs sm:text-sm font-bold font-mono text-slate-800">3.2 bar</span>
       </div>
-      <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
-        <p class="text-[11px] text-slate-400">Level Tangki</p>
-        <p id="modalStatLevel" class="text-sm font-bold text-slate-800 font-mono mt-0.5">82%</p>
-      </div>
-      <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
-        <p class="text-[11px] text-slate-400">Status Node IoT</p>
-        <p id="modalStatMcuCount" class="text-sm font-bold text-emerald-600 mt-0.5">Online</p>
+      <div class="bg-white p-2 rounded-xl border border-slate-100">
+        <span class="text-[10px] text-slate-400 block uppercase">Tangki</span>
+        <span id="modalStatLevel" class="text-xs sm:text-sm font-bold font-mono text-slate-800">82%</span>
       </div>
     </div>
 
-    <!-- Modal Scrollable Body -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
-
-      <div class="flex items-center justify-between">
-        <div>
-          <h4 class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-            <i data-lucide="microchip" class="w-4 h-4 text-blue-600"></i>
-            Daftar Perangkat (Microcontroller)
-          </h4>
-          <p class="text-xs text-slate-400 mt-0.5">Klik microcontroller untuk melihat sensor Flow Meter yang terhubung</p>
-        </div>
-        <span class="text-[11px] text-slate-400 font-mono">Pilih perangkat &darr;</span>
+    <!-- Scrollable Body (List Microcontrollers) -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+      <div class="flex items-center justify-between mb-1">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Perangkat Microcontroller</h4>
+        <span class="text-[11px] text-slate-400">Klik untuk expand sensor</span>
       </div>
 
-      <!-- Container of Microcontroller Cards (with Flow Meters inside) -->
       <div id="mcuAccordionContainer" class="space-y-3">
-        <!-- Rendered via JavaScript -->
+        <!-- Rendered by JS -->
       </div>
-
     </div>
 
     <!-- Modal Footer -->
-    <div class="px-5 py-3.5 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-      <div class="flex items-center gap-2 text-xs text-slate-500">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-live shrink-0"></span>
-        <span>Data telemetri streaming aktif via MQTT broker</span>
-      </div>
-      <div class="flex items-center gap-2 self-end sm:self-auto">
-        <a href="control.html" class="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors">
-          Kontrol Pompa
-        </a>
-        <button onclick="closeWaterplantModal()" class="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-600/20 active:scale-95 transition-all">
-          Tutup
-        </button>
-      </div>
+    <div class="px-5 py-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0">
+      <span class="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Telemetri terhubung
+      </span>
+      <button onclick="closeWaterplantModal()" class="px-4 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+        Tutup
+      </button>
     </div>
 
   </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- JAVASCRIPT: DATA & INTERACTIONS                                           -->
+<!-- JAVASCRIPT: DATA & LOGIC                                                  -->
 <!-- ========================================================================= -->
 <script>
-  // Mobile sidebar toggle
-  const sidebar = document.getElementById('sidebar');
-  const backdrop = document.getElementById('backdrop');
-  const openBtn = document.getElementById('openSidebar');
-  const closeBtn = document.getElementById('closeSidebar');
-
-  function openSidebar() {
-    sidebar.classList.remove('-translate-x-full');
-    backdrop.classList.remove('hidden');
-  }
-  function closeSidebar() {
-    sidebar.classList.add('-translate-x-full');
-    backdrop.classList.add('hidden');
-  }
-  openBtn.addEventListener('click', openSidebar);
-  closeBtn.addEventListener('click', closeSidebar);
-  backdrop.addEventListener('click', closeSidebar);
-
-  // ============ TANK (visual volume) ============
-  function buildTank(el) {
-    const percent = parseFloat(el.dataset.percent) || 0;
-    const from = el.dataset.colorFrom || '#3b82f6';
-    const to = el.dataset.colorTo || '#1d4ed8';
-    el.classList.add('relative');
-    el.innerHTML = `
-      <div class="tank-shell relative border-2 border-slate-200 bg-slate-50 overflow-hidden mx-auto">
-        <div class="tank-fill" style="height:${Math.min(100,Math.max(0,percent))}%; background:linear-gradient(180deg, ${from}, ${to});">
-          <div class="tank-shimmer w-full h-full" style="background:linear-gradient(180deg, rgba(255,255,255,.25), transparent 60%);"></div>
-        </div>
-      </div>
-      <p class="text-center text-xs font-mono font-semibold text-slate-700 mt-1">${percent}%</p>
-    `;
-  }
-  document.querySelectorAll('.tank').forEach(buildTank);
-
-  // ============ GAUGE (speedometer tekanan) ============
-  function buildGauge(el) {
-    const value = parseFloat(el.dataset.value) || 0;
-    const min = parseFloat(el.dataset.min) || 0;
-    const max = parseFloat(el.dataset.max) || 100;
-    const unit = el.dataset.unit || 'bar';
-    const frac = Math.min(1, Math.max(0, (value - min) / (max - min)));
-    const angle = -90 + frac * 180;
-
-    el.innerHTML = `
-      <div class="gauge-box">
-        <div class="gauge-face" style="background: conic-gradient(from 270deg,
-          #f43f5e 0%, #f43f5e 7.5%,
-          #f59e0b 7.5%, #f59e0b 15%,
-          #10b981 15%, #10b981 35%,
-          #f59e0b 35%, #f59e0b 42.5%,
-          #f43f5e 42.5%, #f43f5e 50%,
-          transparent 50%);"></div>
-        <div class="gauge-needle" style="transform: translateX(-50%) rotate(${angle}deg);"></div>
-        <div class="gauge-pivot"></div>
-      </div>
-      <p class="text-center text-sm font-mono font-semibold text-slate-800 -mt-1">${value.toFixed(1)} <span class="text-xs text-slate-400 font-normal">${unit}</span></p>
-    `;
-  }
-  document.querySelectorAll('.gauge').forEach(buildGauge);
-
-  // ============ PUMP STATUS CHART (DONUT) ============
+  // =========================================================================
+  // Chart 1: Donut Status Pompa
+  // =========================================================================
   new Chart(document.getElementById('pumpStatusChart'), {
     type: 'doughnut',
     data: {
-      labels: ['Berjalan', 'Siaga', 'Bermasalah'],
+      labels: ['Berjalan', 'Siaga', 'Error'],
       datasets: [{
         data: [5, 2, 1],
-        backgroundColor: ['#10b981', '#93c5fd', '#f43f5e'],
+        backgroundColor: ['#0ea5e9', '#cbd5e1', '#f43f5e'],
         borderWidth: 0,
-        hoverOffset: 4
+        hoverOffset: 3
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '68%',
+      cutout: '72%',
       plugins: {
         legend: {
           position: 'right',
-          labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle', font: { size: 11 }, color: '#64748b' }
+          labels: { boxWidth: 6, boxHeight: 6, usePointStyle: true, font: { size: 10 }, color: '#64748b' }
         }
       }
     }
   });
 
-  // ============ TREN DEBIT AIR PER GEDUNG (24 JAM) - LINE CHART ============
+  // =========================================================================
+  // Chart 2: Tren Debit Air per Gedung (24 Jam)
+  // =========================================================================
   const flowTrendCtx = document.getElementById('flowTrendChart').getContext('2d');
-  
-  function createGradient(ctx, hexColor, alpha1 = 0.22, alpha2 = 0) {
-    const grad = ctx.createLinearGradient(0, 0, 0, 250);
-    grad.addColorStop(0, hexColor + Math.round(alpha1 * 255).toString(16).padStart(2, '0'));
-    grad.addColorStop(1, hexColor + Math.round(alpha2 * 255).toString(16).padStart(2, '0'));
-    return grad;
-  }
-
   const hours = ['00:00','02:00','04:00','06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00'];
   
   new Chart(flowTrendCtx, {
@@ -859,46 +631,39 @@
         {
           label: 'Gedung A',
           data: [3.2, 3.0, 2.9, 3.5, 4.3, 4.6, 4.8, 4.2, 4.5, 4.4, 4.0, 4.1],
-          borderColor: '#2563eb',
-          backgroundColor: createGradient(flowTrendCtx, '#2563eb'),
+          borderColor: '#0ea5e9',
+          backgroundColor: 'rgba(14, 165, 233, 0.08)',
           fill: true,
           tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          borderWidth: 2.5
+          pointRadius: 0,
+          borderWidth: 2
         },
         {
           label: 'Gedung B',
           data: [2.5, 2.4, 2.2, 2.8, 3.5, 3.8, 3.9, 3.5, 3.8, 3.7, 3.4, 3.6],
-          borderColor: '#38bdf8',
-          backgroundColor: createGradient(flowTrendCtx, '#38bdf8'),
-          fill: true,
+          borderColor: '#22d3ee',
+          backgroundColor: 'transparent',
           tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          borderWidth: 2.5
+          pointRadius: 0,
+          borderWidth: 2
         },
         {
           label: 'Gedung C',
           data: [3.8, 3.6, 3.4, 3.1, 2.6, 1.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
           borderColor: '#f43f5e',
-          backgroundColor: createGradient(flowTrendCtx, '#f43f5e'),
-          fill: true,
+          backgroundColor: 'transparent',
           tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          borderWidth: 2.5
+          pointRadius: 0,
+          borderWidth: 2
         },
         {
           label: 'Gedung D',
           data: [3.4, 3.3, 3.1, 3.7, 4.5, 4.7, 4.9, 4.5, 4.8, 4.7, 4.5, 4.6],
           borderColor: '#10b981',
-          backgroundColor: createGradient(flowTrendCtx, '#10b981'),
-          fill: true,
+          backgroundColor: 'transparent',
           tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          borderWidth: 2.5
+          pointRadius: 0,
+          borderWidth: 2
         }
       ]
     },
@@ -907,162 +672,105 @@
       maintainAspectRatio: false,
       interaction: { intersect: false, mode: 'index' },
       plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0f172a',
-          titleFont: { size: 12, weight: '600' },
-          bodyFont: { size: 11 },
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: function(context) {
-              return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} L/mnt`;
-            }
-          }
-        }
+        legend: { display: false }
       },
       scales: {
         y: {
           min: 0,
           max: 6,
-          ticks: {
-            stepSize: 1,
-            callback: v => v + ' L/m'
-          },
-          grid: { color: '#f1f5f9' }
+          ticks: { callback: v => v + ' L/m', font: { size: 10 } },
+          grid: { color: '#f8fafc' }
         },
-        x: { grid: { display: false } }
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
       }
     }
   });
 
-  // ============ BAR CHART: DEBIT AIR PER GEDUNG REAL-TIME ============
-  const flowCtx = document.getElementById('flowChart');
-  const flowCtx2d = flowCtx.getContext('2d');
-  function barGradient(color) {
-    const g = flowCtx2d.createLinearGradient(0, 0, 0, 250);
-    g.addColorStop(0, color);
-    g.addColorStop(1, color + '99');
-    return g;
-  }
-  new Chart(flowCtx, {
+  // =========================================================================
+  // Chart 3: Debit Air Saat Ini Bar Chart
+  // =========================================================================
+  const flowBarCtx = document.getElementById('flowBarChart');
+  new Chart(flowBarCtx, {
     type: 'bar',
     data: {
-      labels: ['Gedung A','Gedung B','Gedung C','Gedung D'],
+      labels: ['Ged. A', 'Ged. B', 'Ged. C', 'Ged. D'],
       datasets: [{
-        label: 'Debit Saat Ini',
         data: [4.1, 3.6, 0.0, 4.6],
-        backgroundColor: [barGradient('#2563eb'), barGradient('#38bdf8'), barGradient('#f43f5e'), barGradient('#10b981')],
+        backgroundColor: ['#0ea5e9', '#22d3ee', '#f43f5e', '#10b981'],
         borderRadius: 8,
-        maxBarThickness: 32
+        maxBarThickness: 28
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return `Debit: ${context.parsed.y.toFixed(1)} L/mnt`;
-            }
-          }
-        }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         y: {
           min: 0,
           max: 6,
-          grid: { color: '#f1f5f9' },
-          ticks: { callback: v => v + ' L/m' }
+          grid: { color: '#f8fafc' },
+          ticks: { callback: v => v + ' L', font: { size: 10 } }
         },
-        x: { grid: { display: false } }
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
       }
     }
   });
 
   // =========================================================================
-  // DATA STRUCTURE: WATERPLANTS -> MICROCONTROLLER -> SENSOR FLOW METER
+  // WATERPLANT MODAL DATA & ACCORDION
   // =========================================================================
   const waterplantsData = {
     'A': {
       name: 'Waterplant A',
-      location: 'Gedung A (Utama) · Sektor Barat Basement Utilitas',
+      location: 'Gedung A (Utama) · Sektor Barat Basement',
       status: 'Normal',
       statusClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      flow: '4.1 L/mnt',
+      flow: '4.1 L/m',
       pressure: '3.2 bar',
       level: '82%',
       microcontrollers: [
         {
           id: 'mcu-a1',
-          name: 'ESP32 Industrial Gateway Node A1',
-          type: 'Microcontroller',
-          model: 'ESP32-WROOM-32D Dual-Core 240MHz',
+          name: 'ESP32 Gateway Node A1',
+          model: 'ESP32-WROOM-32D',
           ip: '192.168.10.101',
-          mac: 'E8:68:E7:2A:B1:01',
-          firmware: 'v2.4.1 (Stable)',
           uptime: '18 hari, 6 jam',
-          signal: 'WiFi -54 dBm (Sangat Baik)',
-          protocol: 'MQTT / WebSocket',
           status: 'Online',
-          statusDot: 'bg-emerald-500',
           flowMeters: [
             {
-              id: 'fm-a101',
-              name: 'Flow Meter Jalur Distribusi Utama (FM-01)',
-              model: 'DN25 High-Precision Turbine Flow Meter',
-              pin: 'GPIO 18 (Pulse Counter Interrupt)',
+              name: 'Flow Meter Jalur Utama (FM-01)',
+              model: 'DN25 Turbine Flow Sensor',
+              pin: 'GPIO 18',
               currentFlow: '4.1 L/menit',
-              hourlyFlow: '246 L/jam',
-              totalVolume: '6,420 Liter',
-              range: '1 – 60 L/menit (±1.5%)',
-              waterTemp: '26.4 °C',
-              status: 'Normal / Aliran Stabil',
-              statusBadge: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+              totalVolume: '6.420 L',
+              status: 'Normal'
             },
             {
-              id: 'fm-a102',
-              name: 'Flow Meter Inlet Filtrasi Pasir (FM-02)',
-              model: 'YF-S201 Hall Effect Water Flow Sensor',
-              pin: 'GPIO 19 (Pulse Counter Input)',
+              name: 'Flow Meter Inlet Filtrasi (FM-02)',
+              model: 'YF-S201 Hall Effect',
+              pin: 'GPIO 19',
               currentFlow: '3.8 L/menit',
-              hourlyFlow: '228 L/jam',
-              totalVolume: '4,890 Liter',
-              range: '1 – 30 L/menit (±2.0%)',
-              waterTemp: '25.8 °C',
-              status: 'Normal / Running',
-              statusBadge: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+              totalVolume: '4.890 L',
+              status: 'Normal'
             }
           ]
         },
         {
           id: 'mcu-a2',
-          name: 'NodeMCU ESP8266 Sub-Controller A2',
-          type: 'Microcontroller',
-          model: 'ESP8266 12-E Single-Core 80MHz',
+          name: 'ESP8266 Sub-Controller A2',
+          model: 'NodeMCU ESP8266',
           ip: '192.168.10.102',
-          mac: '5C:CF:7F:1B:C9:44',
-          firmware: 'v1.9.0',
           uptime: '7 hari, 12 jam',
-          signal: 'WiFi -62 dBm (Baik)',
-          protocol: 'MQTT over TLS',
           status: 'Online',
-          statusDot: 'bg-emerald-500',
           flowMeters: [
             {
-              id: 'fm-a201',
-              name: 'Flow Meter Jalur Resirkulasi Tangki Atas (FM-03)',
-              model: 'TUF-2000M Ultrasonic Flow Transducer',
-              pin: 'RS485 Modbus (UART GPIO 16/17)',
+              name: 'Flow Meter Resirkulasi (FM-03)',
+              model: 'TUF-2000M Ultrasonic',
+              pin: 'RS485 Modbus',
               currentFlow: '0.0 L/menit',
-              hourlyFlow: '0 L/jam',
-              totalVolume: '1,840 Liter',
-              range: '0.1 – 120 L/menit (±1.0%)',
-              waterTemp: '26.0 °C',
-              status: 'Standby / Siaga',
-              statusBadge: 'bg-slate-100 text-slate-600 border-slate-200'
+              totalVolume: '1.840 L',
+              status: 'Standby'
             }
           ]
         }
@@ -1070,39 +778,28 @@
     },
     'B': {
       name: 'Waterplant B',
-      location: 'Gedung B (Tower 1) · Rooftop & Booster Pump Room',
+      location: 'Gedung B (Tower 1) · Ruang Pompa Rooftop',
       status: 'Level Rendah',
       statusClass: 'bg-amber-50 text-amber-600 border-amber-200',
-      flow: '3.6 L/mnt',
+      flow: '3.6 L/m',
       pressure: '2.8 bar',
       level: '21%',
       microcontrollers: [
         {
           id: 'mcu-b1',
-          name: 'ESP32-S3 Booster Telemetry Unit B1',
-          type: 'Microcontroller',
-          model: 'ESP32-S3 Dual-Core Xtensa LX7 (8MB Flash)',
+          name: 'ESP32-S3 Booster Telemetry',
+          model: 'ESP32-S3 Dual Core',
           ip: '192.168.10.105',
-          mac: '48:27:E2:D3:5F:88',
-          firmware: 'v3.1.0',
           uptime: '5 hari, 3 jam',
-          signal: 'Ethernet RJ45 (100 Mbps)',
-          protocol: 'Modbus RTU / MQTT',
           status: 'Online',
-          statusDot: 'bg-emerald-500',
           flowMeters: [
             {
-              id: 'fm-b101',
               name: 'Flow Meter Booster Pump B1 (FM-04)',
-              model: 'YF-DN40 Magnetic Pulse Flow Sensor',
-              pin: 'GPIO 4 (High-Speed Pulse Interrupt)',
+              model: 'YF-DN40 Magnetic Sensor',
+              pin: 'GPIO 4',
               currentFlow: '3.6 L/menit',
-              hourlyFlow: '216 L/jam',
-              totalVolume: '3,850 Liter',
-              range: '5 – 150 L/menit (±2.0%)',
-              waterTemp: '27.1 °C',
-              status: 'Aktif / Peringatan Level Rendah',
-              statusBadge: 'bg-amber-50 text-amber-600 border-amber-200'
+              totalVolume: '3.850 L',
+              status: 'Aktif'
             }
           ]
         }
@@ -1110,39 +807,28 @@
     },
     'C': {
       name: 'Waterplant C',
-      location: 'Gedung C (Treatment) · Sentral Treatment Plant Lantai Dasar',
-      status: 'Pompa Gagal',
+      location: 'Gedung C (Treatment) · Lantai Dasar',
+      status: 'Pompa Trip',
       statusClass: 'bg-rose-50 text-rose-600 border-rose-200',
-      flow: '0.0 L/mnt',
+      flow: '0.0 L/m',
       pressure: '0.4 bar',
       level: '65%',
       microcontrollers: [
         {
           id: 'mcu-c1',
-          name: 'ESP32-WROVER Industrial Shield C1',
-          type: 'Microcontroller',
-          model: 'ESP32-WROVER-E (8MB PSRAM)',
+          name: 'ESP32 Industrial Shield C1',
+          model: 'ESP32-WROVER-E',
           ip: '192.168.10.110',
-          mac: '30:AE:A4:07:0D:64',
-          firmware: 'v2.4.0',
           uptime: '2 hari, 18 jam',
-          signal: 'WiFi -68 dBm (Cukup)',
-          protocol: 'MQTT Failover',
-          status: 'Online (Alert)',
-          statusDot: 'bg-rose-500',
+          status: 'Alert Mode',
           flowMeters: [
             {
-              id: 'fm-c101',
-              name: 'Flow Meter Suplai Utama Pompa 1 (FM-05)',
-              model: 'Electromagnetic Flow Meter DN50 Industrial',
-              pin: '4-20mA to ADC (GPIO 34 via ADS1115)',
+              name: 'Flow Meter Suplai Pompa 1 (FM-05)',
+              model: 'Electromagnetic DN50',
+              pin: '4-20mA (ADS1115)',
               currentFlow: '0.0 L/menit',
-              hourlyFlow: '0 L/jam',
-              totalVolume: '8,120 Liter',
-              range: '0 – 300 L/menit (±0.5%)',
-              waterTemp: '25.1 °C',
-              status: 'Trip / Tidak Ada Aliran',
-              statusBadge: 'bg-rose-50 text-rose-600 border-rose-200'
+              totalVolume: '8.120 L',
+              status: 'Aliran Terhenti'
             }
           ]
         }
@@ -1150,39 +836,28 @@
     },
     'D': {
       name: 'Waterplant D',
-      location: 'Gedung D (Distribusi) · Blok D Gardu Distribusi Air Timur',
+      location: 'Gedung D (Distribusi) · Gardu Timur',
       status: 'Normal',
       statusClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      flow: '4.6 L/mnt',
+      flow: '4.6 L/m',
       pressure: '3.5 bar',
       level: '90%',
       microcontrollers: [
         {
           id: 'mcu-d1',
           name: 'ESP32 Telemetry Controller Node D1',
-          type: 'Microcontroller',
-          model: 'ESP32-D0WDQ6 Dual-Core 240MHz',
+          model: 'ESP32-D0WDQ6',
           ip: '192.168.10.120',
-          mac: '24:0A:C4:61:98:A2',
-          firmware: 'v2.4.2',
           uptime: '24 hari, 11 jam',
-          signal: 'WiFi -52 dBm (Sangat Baik)',
-          protocol: 'MQTT / Webhook',
           status: 'Online',
-          statusDot: 'bg-emerald-500',
           flowMeters: [
             {
-              id: 'fm-d101',
-              name: 'Flow Meter Distribusi Zona Timur (FM-06)',
-              model: 'DN32 Digital Pulse Flow Meter',
-              pin: 'GPIO 14 (Interrupt Counter Pin)',
+              name: 'Flow Meter Distribusi Timur (FM-06)',
+              model: 'DN32 Digital Pulse',
+              pin: 'GPIO 14',
               currentFlow: '4.6 L/menit',
-              hourlyFlow: '276 L/jam',
-              totalVolume: '7,930 Liter',
-              range: '2 – 80 L/menit (±1.5%)',
-              waterTemp: '26.2 °C',
-              status: 'Normal / Aliran Optimal',
-              statusBadge: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+              totalVolume: '7.930 L',
+              status: 'Normal'
             }
           ]
         }
@@ -1190,209 +865,106 @@
     }
   };
 
-  // =========================================================================
-  // MODAL OPEN / CLOSE & ACCORDION BEHAVIOR
-  // =========================================================================
   const modalEl = document.getElementById('waterplantModal');
 
-  function openWaterplantModal(plantKey) {
-    const data = waterplantsData[plantKey];
+  function openWaterplantModal(key) {
+    const data = waterplantsData[key];
     if (!data) return;
 
-    // Header info
     document.getElementById('modalPlantTitle').textContent = data.name;
     document.getElementById('modalPlantSubtitle').textContent = data.location;
     
     const badge = document.getElementById('modalPlantStatusBadge');
     badge.textContent = data.status;
-    badge.className = `text-xs font-semibold px-2 py-0.5 rounded-full border ${data.statusClass}`;
+    badge.className = `text-[11px] font-semibold px-2 py-0.5 rounded-full border ${data.statusClass}`;
 
-    // Quick stats
     document.getElementById('modalStatFlow').textContent = data.flow;
     document.getElementById('modalStatPressure').textContent = data.pressure;
     document.getElementById('modalStatLevel').textContent = data.level;
-    document.getElementById('modalStatMcuCount').textContent = `${data.microcontrollers.length} MCU Online`;
 
-    // Render Microcontroller Cards + Connected Flow Meters
     const container = document.getElementById('mcuAccordionContainer');
     container.innerHTML = '';
 
-    data.microcontrollers.forEach((mcu, index) => {
-      // By default open the first microcontroller so user immediately sees connected flow meters!
-      const isOpen = index === 0;
+    data.microcontrollers.forEach((mcu, idx) => {
+      const isOpen = idx === 0;
+      const card = document.createElement('div');
+      card.className = 'border border-slate-200/80 rounded-2xl overflow-hidden bg-white';
 
-      const mcuCard = document.createElement('div');
-      mcuCard.className = 'border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs transition-all duration-200 hover:border-blue-300';
-      
-      // Microcontroller Header (Clickable!)
-      const headerHtml = `
-        <button type="button" onclick="toggleMcuAccordion('${mcu.id}')" class="w-full px-4 py-3.5 bg-slate-50/70 hover:bg-slate-100/80 transition-colors flex items-center justify-between gap-3 text-left cursor-pointer focus:outline-none">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-9 h-9 rounded-lg bg-blue-100/70 border border-blue-200 flex items-center justify-center shrink-0 text-blue-700">
-              <i data-lucide="cpu" class="w-5 h-5"></i>
+      const sensorHtml = mcu.flowMeters.map(fm => `
+        <div class="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-semibold text-xs text-slate-800">${fm.name}</span>
+            <span class="text-[10px] font-medium bg-white text-slate-600 px-2 py-0.5 rounded border border-slate-200">${fm.status}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-[11px] pt-1">
+            <div>
+              <span class="text-slate-400 block text-[10px]">Model & Pin</span>
+              <span class="text-slate-700 font-medium">${fm.model} (${fm.pin})</span>
             </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-semibold text-slate-800 text-sm truncate">${mcu.name}</span>
-                <span class="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.2 rounded bg-white text-slate-600 border border-slate-200">
-                  <span class="w-1.5 h-1.5 rounded-full ${mcu.statusDot}"></span>
-                  ${mcu.status}
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 font-mono mt-0.5">${mcu.model} · IP: ${mcu.ip}</p>
+            <div>
+              <span class="text-slate-400 block text-[10px]">Debit Real-Time</span>
+              <span class="font-bold font-mono text-sky-600">${fm.currentFlow}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[10px]">Total Terukur</span>
+              <span class="font-mono text-slate-700">${fm.totalVolume}</span>
             </div>
           </div>
+        </div>
+      `).join('');
 
-          <div class="flex items-center gap-2.5 shrink-0">
-            <span class="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-              <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-              ${mcu.flowMeters.length} Sensor Flow Meter
-            </span>
-            <div id="icon-${mcu.id}" class="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 transform transition-transform duration-300 ${isOpen ? 'rotate-180 text-blue-600' : ''}">
-              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+      card.innerHTML = `
+        <button type="button" onclick="toggleMcuAccordion('${mcu.id}')" class="w-full px-4 py-3 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between text-left cursor-pointer">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-xs">
+              <i data-lucide="cpu" class="w-4 h-4"></i>
             </div>
+            <div>
+              <p class="font-bold text-xs text-slate-800">${mcu.name}</p>
+              <p class="text-[11px] text-slate-400 font-mono">${mcu.model} · IP: ${mcu.ip}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono text-slate-500">${mcu.flowMeters.length} Sensor</span>
+            <i id="icon-${mcu.id}" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180 text-sky-600' : ''}"></i>
           </div>
         </button>
-      `;
-
-      // Accordion Content (Sensors Flow Meter)
-      let sensorCardsHtml = '';
-      mcu.flowMeters.forEach(fm => {
-        sensorCardsHtml += `
-          <div class="bg-gradient-to-br from-white to-slate-50 border border-slate-200/90 rounded-xl p-3.5 shadow-2xs hover:border-blue-400 transition-all">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200/70 flex items-center justify-center text-sky-600 shrink-0">
-                  <i data-lucide="waves" class="w-4 h-4"></i>
-                </div>
-                <div>
-                  <h5 class="text-sm font-semibold text-slate-800">${fm.name}</h5>
-                  <p class="text-xs text-slate-400 font-mono">${fm.model} · Pin: <span class="text-slate-600 font-medium">${fm.pin}</span></p>
-                </div>
-              </div>
-              <span class="text-xs font-medium px-2 py-0.5 rounded-md border self-start sm:self-auto ${fm.statusBadge}">
-                ${fm.status}
-              </span>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 text-xs">
-              <div class="bg-blue-50/50 rounded-lg p-2 border border-blue-100/50">
-                <span class="text-[11px] text-slate-400 block">Debit Real-Time</span>
-                <span class="text-sm font-bold font-mono text-blue-600 mt-0.5 block">${fm.currentFlow}</span>
-              </div>
-              <div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
-                <span class="text-[11px] text-slate-400 block">Laju / Jam</span>
-                <span class="text-xs font-semibold font-mono text-slate-700 mt-0.5 block">${fm.hourlyFlow}</span>
-              </div>
-              <div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
-                <span class="text-[11px] text-slate-400 block">Total Volume</span>
-                <span class="text-xs font-semibold font-mono text-slate-700 mt-0.5 block">${fm.totalVolume}</span>
-              </div>
-              <div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
-                <span class="text-[11px] text-slate-400 block">Suhu Cairan</span>
-                <span class="text-xs font-semibold font-mono text-slate-700 mt-0.5 block">${fm.waterTemp}</span>
-              </div>
-            </div>
-
-            <div class="mt-2.5 pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100/80">
-              <span>Rentang Sensor: <span class="font-mono text-slate-600">${fm.range}</span></span>
-              <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                <i data-lucide="check-circle-2" class="w-3 h-3"></i> Telemetri OK
-              </span>
-            </div>
-          </div>
-        `;
-      });
-
-      const bodyHtml = `
         <div id="content-${mcu.id}" class="accordion-content ${isOpen ? 'is-open' : ''}">
           <div class="accordion-inner">
-            <div class="p-4 border-t border-slate-200 bg-white space-y-3">
-              
-              <!-- Microcontroller Details Bar -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
-                <div>
-                  <span class="text-[10px] text-slate-400 block uppercase tracking-wider">MAC Address</span>
-                  <span class="font-mono text-slate-700 text-[11px] font-medium">${mcu.mac}</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Firmware</span>
-                  <span class="font-mono text-slate-700 text-[11px] font-medium">${mcu.firmware}</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Uptime</span>
-                  <span class="font-mono text-slate-700 text-[11px] font-medium">${mcu.uptime}</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Koneksi</span>
-                  <span class="text-slate-700 text-[11px] font-medium">${mcu.signal}</span>
-                </div>
-              </div>
-
-              <!-- Sensor Subheading -->
-              <div class="flex items-center justify-between pt-1">
-                <span class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                  <i data-lucide="gauge" class="w-3.5 h-3.5 text-blue-600"></i>
-                  Sensor Flow Meter Terhubung (${mcu.flowMeters.length})
-                </span>
-                <span class="text-[11px] text-slate-400">Protokol: ${mcu.protocol}</span>
-              </div>
-
-              <!-- List of Flow Meters -->
-              <div class="space-y-2.5">
-                ${sensorCardsHtml}
-              </div>
-
+            <div class="p-3 border-t border-slate-100 space-y-2 bg-white">
+              ${sensorHtml}
             </div>
           </div>
         </div>
       `;
-
-      mcuCard.innerHTML = headerHtml + bodyHtml;
-      container.appendChild(mcuCard);
+      container.appendChild(card);
     });
 
-    // Re-create icons for dynamic elements
     lucide.createIcons();
-
-    // Show modal with smooth animation
-    modalEl.classList.remove('pointer-events-none');
     modalEl.classList.add('modal-active');
-    document.body.classList.add('overflow-hidden');
   }
 
-  function toggleMcuAccordion(mcuId) {
-    const content = document.getElementById(`content-${mcuId}`);
-    const icon = document.getElementById(`icon-${mcuId}`);
+  function toggleMcuAccordion(id) {
+    const content = document.getElementById(`content-${id}`);
+    const icon = document.getElementById(`icon-${id}`);
     if (!content) return;
-
     if (content.classList.contains('is-open')) {
       content.classList.remove('is-open');
-      if (icon) {
-        icon.classList.remove('rotate-180', 'text-blue-600');
-      }
+      if (icon) icon.classList.remove('rotate-180', 'text-sky-600');
     } else {
       content.classList.add('is-open');
-      if (icon) {
-        icon.classList.add('rotate-180', 'text-blue-600');
-      }
+      if (icon) icon.classList.add('rotate-180', 'text-sky-600');
     }
   }
 
   function closeWaterplantModal() {
     modalEl.classList.remove('modal-active');
-    modalEl.classList.add('pointer-events-none');
-    document.body.classList.remove('overflow-hidden');
   }
 
-  // Close modal on Escape key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalEl.classList.contains('modal-active')) {
-      closeWaterplantModal();
-    }
+    if (e.key === 'Escape') closeWaterplantModal();
   });
 
-  // Initialize icons
   lucide.createIcons();
 </script>
 

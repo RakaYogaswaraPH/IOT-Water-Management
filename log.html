@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WaterPlant Monitoring — Log Aktivitas</title>
+<title>IOT Waterplant Monitoring — Log Aktivitas</title>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   html {
     scroll-behavior: smooth;
   }
-  /* Hide scrollbar in all browsers while keeping scrollable */
   ::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -23,278 +22,273 @@
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
-
-  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-
-<!-- Mobile sidebar backdrop -->
-<div id="backdrop" class="hidden fixed inset-0 bg-slate-900/40 z-30 lg:hidden"></div>
+<body class="bg-slate-50/70 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
 
 <div class="flex min-h-screen">
 
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col -translate-x-full transition-transform duration-200 lg:translate-x-0 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:shrink-0">
-    <div class="flex items-center gap-3 px-5 h-16 border-b border-slate-200">
-      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-        <i data-lucide="droplets" class="w-5 h-5 text-white"></i>
+  <!-- ======================================================================= -->
+  <!-- DESKTOP / TABLET SIDEBAR                                                -->
+  <!-- ======================================================================= -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 sticky top-0 h-screen shrink-0 z-30">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
+      <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-sm shadow-sky-500/25">
+        <i data-lucide="droplet" class="w-5 h-5"></i>
       </div>
-      <div class="leading-tight">
-        <p class="font-semibold text-slate-900 text-sm">WaterPlant Monitoring</p>
-        <p class="text-xs text-slate-400">IoT Water Management</p>
+      <div>
+        <p class="font-bold text-slate-900 text-sm tracking-tight">IOT Waterplant</p>
+        <p class="text-[11px] text-slate-400 font-medium">Blynk Dashboard</p>
       </div>
-      <button id="closeSidebar" class="ml-auto lg:hidden text-slate-400 hover:text-slate-600">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-      <p class="px-3 text-xs font-medium text-slate-400 mb-2">Menu Utama</p>
+    <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <p class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">Menu</p>
 
-      <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+      <a href="index.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="layout-grid" class="w-4.5 h-4.5"></i>
         Beranda
       </a>
-      <a href="alarm.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="bell-ring" class="w-4.5 h-4.5"></i>
-        Alarm
-        <span class="ml-auto text-xs bg-rose-100 text-rose-600 font-semibold px-1.5 py-0.5 rounded-md">3</span>
-      </a>
-      <a href="control.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="settings-2" class="w-4.5 h-4.5"></i>
+      <a href="control.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="power" class="w-4.5 h-4.5"></i>
         Kontrol Pompa
       </a>
-      <a href="log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-600 border-l-2 border-blue-600 font-medium text-sm">
+      <a href="alarm.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+        Alarm
+        <span class="ml-auto text-xs bg-rose-50 text-rose-600 font-semibold px-2 py-0.5 rounded-full border border-rose-200/60">3</span>
+      </a>
+      <a href="log.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-sky-50 text-sky-600 font-semibold text-sm transition-colors">
         <i data-lucide="history" class="w-4.5 h-4.5"></i>
         Log Aktivitas
       </a>
-      <a href="report.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
+      <a href="report.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
         <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
         Laporan Harian
       </a>
     </nav>
 
-    <div class="p-3 border-t border-slate-200">
-      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm">
-        <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
-        Keluar
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center">
+          OP
+        </div>
+        <div class="leading-tight">
+          <p class="text-xs font-semibold text-slate-800">Operator</p>
+          <p class="text-[10px] text-emerald-600 flex items-center gap-1 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+          </p>
+        </div>
+      </div>
+      <a href="log.html" title="Refresh" class="text-slate-400 hover:text-slate-600 p-1.5">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       </a>
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- ======================================================================= -->
+  <!-- MAIN WORKSPACE                                                          -->
+  <!-- ======================================================================= -->
   <div class="flex-1 min-w-0 flex flex-col">
 
-    <!-- TOP BAR -->
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-20">
-      <button id="openSidebar" class="lg:hidden text-slate-500 hover:text-slate-700">
-        <i data-lucide="menu" class="w-6 h-6"></i>
-      </button>
-
-      <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full max-w-xs text-slate-400">
-        <i data-lucide="search" class="w-4 h-4"></i>
-        <input type="text" placeholder="Cari gedung, pompa, sensor..." class="bg-transparent outline-none text-sm text-slate-600 placeholder:text-slate-400 w-full">
-      </div>
-
-      <button class="sm:hidden ml-auto text-slate-500">
-        <i data-lucide="search" class="w-5 h-5"></i>
-      </button>
-
-      <div class="hidden sm:block flex-1"></div>
-
-      <div class="flex items-center gap-4 ml-auto sm:ml-0 shrink-0">
-        <div class="flex items-center gap-2">
-          <img src="https://i.pravatar.cc/64?img=12" class="w-8 h-8 rounded-full object-cover" alt="Admin">
-          <div class="hidden md:block leading-tight">
-            <p class="text-sm font-medium text-slate-700">Administrator</p>
-            <p class="text-xs text-slate-400">Operator</p>
-          </div>
-          <i data-lucide="chevron-down" class="hidden md:block w-4 h-4 text-slate-400"></i>
+    <!-- Top App Bar -->
+    <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 md:hidden">
+        <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white">
+          <i data-lucide="history" class="w-4.5 h-4.5"></i>
         </div>
+        <span class="font-bold text-slate-900 text-sm tracking-tight">Log Aktivitas</span>
       </div>
+
+      <div class="hidden md:block">
+        <h1 class="text-base font-bold text-slate-900">Log Aktivitas Sistem</h1>
+        <p class="text-xs text-slate-400">Riwayat eksekusi kontrol pompa, insiden alarm, dan event telemetri</p>
+      </div>
+
+      <button onclick="downloadCSV()" class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-sky-600 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 rounded-xl transition-colors">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        <span>Ekspor CSV</span>
+      </button>
     </header>
 
-    <!-- CONTENT -->
-    <main class="flex-1 p-4 sm:p-6 space-y-6">
+    <main class="flex-1 p-4 sm:p-6 pb-24 md:pb-8 space-y-6 max-w-7xl mx-auto w-full">
 
-      <!-- Page heading -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Log Aktivitas</h1>
-          <p class="text-sm text-slate-400 mt-0.5">Catatan seluruh kejadian sistem: kontrol pompa, alarm, dan perubahan pengaturan</p>
+      <!-- =================================================================== -->
+      <!-- FILTER BAR                                                          -->
+      <!-- =================================================================== -->
+      <div class="bg-white border border-slate-200/70 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <button onclick="filterCategory('all')" id="tabAll" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-sky-500 text-white shrink-0 transition-colors">
+            Semua Event
+          </button>
+          <button onclick="filterCategory('Pompa')" id="tabPump" class="text-xs font-medium px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0 transition-colors">
+            Kontrol Pompa
+          </button>
+          <button onclick="filterCategory('Alarm')" id="tabAlarm" class="text-xs font-medium px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0 transition-colors">
+            Alarm
+          </button>
+          <button onclick="filterCategory('Sistem')" id="tabSystem" class="text-xs font-medium px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0 transition-colors">
+            Sistem IoT
+          </button>
         </div>
-        <button class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 self-start sm:self-auto">
-          <i data-lucide="download" class="w-4 h-4 text-slate-400"></i>
-          Ekspor CSV
-        </button>
+
+        <div class="flex items-center gap-2">
+          <select id="plantFilter" onchange="filterPlant(this.value)" class="bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs text-slate-700 font-medium outline-none cursor-pointer">
+            <option value="all">Semua Waterplant</option>
+            <option value="Waterplant A">Waterplant A</option>
+            <option value="Waterplant B">Waterplant B</option>
+            <option value="Waterplant C">Waterplant C</option>
+            <option value="Waterplant D">Waterplant D</option>
+          </select>
+        </div>
+
       </div>
 
-      <!-- Filter bar -->
-      <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col lg:flex-row lg:items-center gap-3">
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
-          <button class="shrink-0 text-sm font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white">Semua</button>
-          <button class="shrink-0 text-sm px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50">Kontrol Pompa</button>
-          <button class="shrink-0 text-sm px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50">Alarm</button>
-          <button class="shrink-0 text-sm px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50">Sistem</button>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-2 lg:ml-auto">
-          <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-400 w-full sm:w-44">
-            <i data-lucide="calendar" class="w-4 h-4"></i>
-            <input type="date" value="2026-08-31" class="bg-transparent outline-none text-sm text-slate-600 w-full">
-          </div>
-          <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-400 w-full sm:w-44">
-            <i data-lucide="building-2" class="w-4 h-4"></i>
-            <select class="bg-transparent outline-none text-sm text-slate-600 w-full">
-              <option>Semua Gedung</option>
-              <option>Gedung A</option>
-              <option>Gedung B</option>
-              <option>Gedung C</option>
-              <option>Gedung D</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Log table -->
-      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-slate-100 text-left text-xs text-slate-400">
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Waktu</th>
-                <th class="font-medium px-4 py-3">Aktivitas</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Gedung</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Tipe</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Pengguna</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">31 Agu 09:46</td>
-                <td class="px-4 py-3 text-slate-700">Pompa 5 gagal berjalan, alarm Fail Pump terpicu</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung C</td>
-                <td class="px-4 py-3"><span class="text-xs bg-rose-100 text-rose-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Alarm</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Sistem</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">31 Agu 09:32</td>
-                <td class="px-4 py-3 text-slate-700">Pompa 2 dinyalakan otomatis (Alternate)</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung A</td>
-                <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Kontrol Pompa</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Sistem</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">31 Agu 09:28</td>
-                <td class="px-4 py-3 text-slate-700">Level tangki di bawah 25%, alarm Low Level terpicu</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung B</td>
-                <td class="px-4 py-3"><span class="text-xs bg-rose-100 text-rose-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Alarm</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Sistem</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">31 Agu 08:57</td>
-                <td class="px-4 py-3 text-slate-700">Mode pompa 4 diubah dari Auto ke Manual</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung B</td>
-                <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Kontrol Pompa</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Administrator</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">31 Agu 08:02</td>
-                <td class="px-4 py-3 text-slate-700">Alarm High Level pada Tangki Cadangan ditandai selesai</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung A</td>
-                <td class="px-4 py-3"><span class="text-xs bg-emerald-100 text-emerald-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Alarm</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Administrator</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">31 Agu 06:00</td>
-                <td class="px-4 py-3 text-slate-700">Laporan harian 30 Agustus berhasil dibuat</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Semua Gedung</td>
-                <td class="px-4 py-3"><span class="text-xs bg-slate-100 text-slate-500 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Sistem</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Sistem</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">30 Agu 22:14</td>
-                <td class="px-4 py-3 text-slate-700">Pipa bocor terdeteksi (zero flow), alarm ditandai selesai setelah perbaikan</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung D</td>
-                <td class="px-4 py-3"><span class="text-xs bg-emerald-100 text-emerald-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Alarm</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Teknisi Lapangan</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">30 Agu 17:40</td>
-                <td class="px-4 py-3 text-slate-700">Tekanan jalur distribusi melebihi batas aman</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung A</td>
-                <td class="px-4 py-3"><span class="text-xs bg-rose-100 text-rose-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Alarm</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Sistem</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">30 Agu 14:05</td>
-                <td class="px-4 py-3 text-slate-700">Konfigurasi Pompa 6 diubah ke mode Alternate</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung C</td>
-                <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Kontrol Pompa</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Administrator</td>
-              </tr>
-
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">30 Agu 13:57</td>
-                <td class="px-4 py-3 text-slate-700">Pompa 2 tidak merespon perintah nyala</td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Gedung B</td>
-                <td class="px-4 py-3"><span class="text-xs bg-rose-100 text-rose-600 font-medium px-2 py-0.5 rounded-md whitespace-nowrap">Alarm</span></td>
-                <td class="px-4 py-3 text-slate-500 whitespace-nowrap">Sistem</td>
-              </tr>
-
-            </tbody>
-          </table>
-        </div>
-
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100">
-          <p class="text-xs text-slate-400">Menampilkan 10 dari 248 catatan</p>
-          <div class="flex items-center gap-1">
-            <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50">
-              <i data-lucide="chevron-left" class="w-4 h-4"></i>
-            </button>
-            <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white text-sm font-medium">1</button>
-            <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50 text-sm">2</button>
-            <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50 text-sm">3</button>
-            <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50">
-              <i data-lucide="chevron-right" class="w-4 h-4"></i>
-            </button>
-          </div>
-        </div>
+      <!-- =================================================================== -->
+      <!-- TIMELINE ACTIVITY FEED (Blynk Style)                                -->
+      <!-- =================================================================== -->
+      <div id="logListContainer" class="space-y-3">
+        <!-- Rendered by JS -->
       </div>
 
     </main>
   </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- BLYNK MOBILE BOTTOM NAVIGATION                                            -->
+<!-- ========================================================================= -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 flex items-center justify-around shadow-lg">
+  <a href="index.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+    <span class="text-[10px]">Beranda</span>
+  </a>
+  <a href="control.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="power" class="w-5 h-5"></i>
+    <span class="text-[10px]">Kontrol</span>
+  </a>
+  <a href="alarm.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors relative">
+    <i data-lucide="bell" class="w-5 h-5"></i>
+    <span class="text-[10px]">Alarm</span>
+    <span class="absolute top-0.5 right-2.5 w-2 h-2 rounded-full bg-rose-500"></span>
+  </a>
+  <a href="log.html" class="flex flex-col items-center gap-1 py-1 px-3 text-sky-600 font-semibold transition-colors">
+    <i data-lucide="history" class="w-5 h-5"></i>
+    <span class="text-[10px]">Log</span>
+  </a>
+  <a href="report.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="file-text" class="w-5 h-5"></i>
+    <span class="text-[10px]">Laporan</span>
+  </a>
+</nav>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT: LOG DATA & FILTER                                             -->
+<!-- ========================================================================= -->
 <script>
-  lucide.createIcons();
+  const logs = [
+    { id: 1, time: '10:15 WIB', plant: 'Waterplant A', category: 'Pompa', event: 'Pompa Transfer 1 dinyalakan otomatis', actor: 'Auto-Alternate Scheduler', icon: 'power', iconColor: 'text-sky-600 bg-sky-50' },
+    { id: 2, time: '09:46 WIB', plant: 'Waterplant C', category: 'Alarm', event: 'Thermal overload relay trip pada Pompa 1', actor: 'ESP32 Protection Node C1', icon: 'alert-triangle', iconColor: 'text-rose-600 bg-rose-50' },
+    { id: 3, time: '09:28 WIB', plant: 'Waterplant B', category: 'Alarm', event: 'Level tandon turun di bawah 25% (terukur 21%)', actor: 'Ultrasonic Level Sensor', icon: 'trending-down', iconColor: 'text-amber-600 bg-amber-50' },
+    { id: 4, time: '08:45 WIB', plant: 'Waterplant C', category: 'Pompa', event: 'Mode pompa diubah ke Manual oleh Operator', actor: 'Administrator (Web)', icon: 'sliders', iconColor: 'text-sky-600 bg-sky-50' },
+    { id: 5, time: '08:02 WIB', plant: 'Waterplant A', category: 'Sistem', event: 'Level cadangan 95%, katup inlet otomatis ditutup', actor: 'ESP32 Auto Valve A1', icon: 'check-circle-2', iconColor: 'text-emerald-600 bg-emerald-50' },
+    { id: 6, time: '06:00 WIB', plant: 'Waterplant D', category: 'Pompa', event: 'Pompa Distribusi 1 & 2 diaktifkan untuk jadwal pagi', actor: 'Siklus Distribusi Timur', icon: 'power', iconColor: 'text-sky-600 bg-sky-50' },
+    { id: 7, time: '00:00 WIB', plant: 'Waterplant A', category: 'Sistem', event: 'Sinkronisasi telemetri MQTT harian berhasil', actor: 'Broker MQTT Local Node', icon: 'activity', iconColor: 'text-slate-600 bg-slate-100' }
+  ];
 
-  const sidebar = document.getElementById('sidebar');
-  const backdrop = document.getElementById('backdrop');
-  const openBtn = document.getElementById('openSidebar');
-  const closeBtn = document.getElementById('closeSidebar');
+  let currentCat = 'all';
+  let currentPlant = 'all';
 
-  function openSidebar() {
-    sidebar.classList.remove('-translate-x-full');
-    backdrop.classList.remove('hidden');
+  function renderLogs() {
+    const container = document.getElementById('logListContainer');
+    container.innerHTML = '';
+
+    const filtered = logs.filter(item => {
+      if (currentCat !== 'all' && item.category !== currentCat) return false;
+      if (currentPlant !== 'all' && item.plant !== currentPlant) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-8 text-center text-xs text-slate-400">
+          Tidak ada log aktivitas untuk filter yang dipilih.
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs flex items-start gap-3.5 hover:border-sky-300 transition-all';
+      card.innerHTML = `
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${item.iconColor}">
+          <i data-lucide="${item.icon}" class="w-4.5 h-4.5"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2 flex-wrap mb-0.5">
+            <span class="text-xs font-bold text-slate-900">${item.event}</span>
+            <span class="text-[11px] font-mono text-slate-400 font-semibold">${item.time}</span>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-slate-400">
+            <span>${item.plant}</span>
+            <span>•</span>
+            <span class="text-slate-600 font-medium">Trigger: ${item.actor}</span>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    lucide.createIcons();
   }
-  function closeSidebar() {
-    sidebar.classList.add('-translate-x-full');
-    backdrop.classList.add('hidden');
+
+  function filterCategory(cat) {
+    currentCat = cat;
+    const btns = {
+      'all': 'tabAll',
+      'Pompa': 'tabPump',
+      'Alarm': 'tabAlarm',
+      'Sistem': 'tabSystem'
+    };
+    Object.keys(btns).forEach(key => {
+      const btn = document.getElementById(btns[key]);
+      if (key === cat) {
+        btn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl bg-sky-500 text-white shrink-0 transition-colors';
+      } else {
+        btn.className = 'text-xs font-medium px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0 transition-colors';
+      }
+    });
+    renderLogs();
   }
-  openBtn.addEventListener('click', openSidebar);
-  closeBtn.addEventListener('click', closeSidebar);
-  backdrop.addEventListener('click', closeSidebar);
+
+  function filterPlant(plant) {
+    currentPlant = plant;
+    renderLogs();
+  }
+
+  function downloadCSV() {
+    let csv = "Waktu,Waterplant,Kategori,Event,Aktor\n";
+    logs.forEach(l => {
+      csv += `"${l.time}","${l.plant}","${l.category}","${l.event}","${l.actor}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `log-aktivitas-waterplant.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  renderLogs();
 </script>
 
 </body>

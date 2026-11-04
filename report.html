@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WaterPlant Monitoring — Laporan Harian</title>
+<title>IOT Waterplant Monitoring — Laporan Harian</title>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   html {
     scroll-behavior: smooth;
   }
-  /* Hide scrollbar in all browsers while keeping scrollable */
   ::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -24,310 +23,225 @@
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
-
-  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-
-<!-- Mobile sidebar backdrop -->
-<div id="backdrop" class="hidden fixed inset-0 bg-slate-900/40 z-30 lg:hidden"></div>
+<body class="bg-slate-50/70 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
 
 <div class="flex min-h-screen">
 
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col -translate-x-full transition-transform duration-200 lg:translate-x-0 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:shrink-0">
-    <div class="flex items-center gap-3 px-5 h-16 border-b border-slate-200">
-      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-        <i data-lucide="droplets" class="w-5 h-5 text-white"></i>
+  <!-- ======================================================================= -->
+  <!-- DESKTOP / TABLET SIDEBAR                                                -->
+  <!-- ======================================================================= -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 sticky top-0 h-screen shrink-0 z-30">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
+      <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-sm shadow-sky-500/25">
+        <i data-lucide="droplet" class="w-5 h-5"></i>
       </div>
-      <div class="leading-tight">
-        <p class="font-semibold text-slate-900 text-sm">WaterPlant Monitoring</p>
-        <p class="text-xs text-slate-400">IoT Water Management</p>
+      <div>
+        <p class="font-bold text-slate-900 text-sm tracking-tight">IOT Waterplant</p>
+        <p class="text-[11px] text-slate-400 font-medium">Blynk Dashboard</p>
       </div>
-      <button id="closeSidebar" class="ml-auto lg:hidden text-slate-400 hover:text-slate-600">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-      <p class="px-3 text-xs font-medium text-slate-400 mb-2">Menu Utama</p>
+    <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <p class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">Menu</p>
 
-      <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+      <a href="index.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="layout-grid" class="w-4.5 h-4.5"></i>
         Beranda
       </a>
-      <a href="alarm.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="bell-ring" class="w-4.5 h-4.5"></i>
-        Alarm
-        <span class="ml-auto text-xs bg-rose-100 text-rose-600 font-semibold px-1.5 py-0.5 rounded-md">3</span>
-      </a>
-      <a href="control.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="settings-2" class="w-4.5 h-4.5"></i>
+      <a href="control.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="power" class="w-4.5 h-4.5"></i>
         Kontrol Pompa
       </a>
-      <a href="log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
+      <a href="alarm.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+        Alarm
+        <span class="ml-auto text-xs bg-rose-50 text-rose-600 font-semibold px-2 py-0.5 rounded-full border border-rose-200/60">3</span>
+      </a>
+      <a href="log.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
         <i data-lucide="history" class="w-4.5 h-4.5"></i>
         Log Aktivitas
       </a>
-      <a href="report.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-600 border-l-2 border-blue-600 font-medium text-sm">
+      <a href="report.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-sky-50 text-sky-600 font-semibold text-sm transition-colors">
         <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
         Laporan Harian
       </a>
     </nav>
 
-    <div class="p-3 border-t border-slate-200">
-      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm">
-        <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
-        Keluar
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center">
+          OP
+        </div>
+        <div class="leading-tight">
+          <p class="text-xs font-semibold text-slate-800">Operator</p>
+          <p class="text-[10px] text-emerald-600 flex items-center gap-1 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+          </p>
+        </div>
+      </div>
+      <a href="report.html" title="Refresh" class="text-slate-400 hover:text-slate-600 p-1.5">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       </a>
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- ======================================================================= -->
+  <!-- MAIN WORKSPACE                                                          -->
+  <!-- ======================================================================= -->
   <div class="flex-1 min-w-0 flex flex-col">
 
-    <!-- TOP BAR -->
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-20">
-      <button id="openSidebar" class="lg:hidden text-slate-500 hover:text-slate-700">
-        <i data-lucide="menu" class="w-6 h-6"></i>
-      </button>
-
-      <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full max-w-xs text-slate-400">
-        <i data-lucide="search" class="w-4 h-4"></i>
-        <input type="text" placeholder="Cari gedung, pompa, sensor..." class="bg-transparent outline-none text-sm text-slate-600 placeholder:text-slate-400 w-full">
+    <!-- Top App Bar -->
+    <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 md:hidden">
+        <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+        </div>
+        <span class="font-bold text-slate-900 text-sm tracking-tight">Laporan Harian</span>
       </div>
 
-      <button class="sm:hidden ml-auto text-slate-500">
-        <i data-lucide="search" class="w-5 h-5"></i>
-      </button>
+      <div class="hidden md:block">
+        <h1 class="text-base font-bold text-slate-900">Laporan Operasional</h1>
+        <p class="text-xs text-slate-400">Ringkasan konsumsi debit air, efisiensi pompa, dan rekapitulasi harian</p>
+      </div>
 
-      <div class="hidden sm:block flex-1"></div>
-
-      <div class="flex items-center gap-4 ml-auto sm:ml-0 shrink-0">
-        <div class="flex items-center gap-2">
-          <img src="https://i.pravatar.cc/64?img=12" class="w-8 h-8 rounded-full object-cover" alt="Admin">
-          <div class="hidden md:block leading-tight">
-            <p class="text-sm font-medium text-slate-700">Administrator</p>
-            <p class="text-xs text-slate-400">Operator</p>
-          </div>
-          <i data-lucide="chevron-down" class="hidden md:block w-4 h-4 text-slate-400"></i>
-        </div>
+      <div class="flex items-center gap-2">
+        <input type="date" value="2026-11-04" class="bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-600 outline-none cursor-pointer">
+        <button onclick="window.print()" class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl shadow-xs transition-colors">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Unduh PDF</span>
+        </button>
       </div>
     </header>
 
-    <!-- CONTENT -->
-    <main class="flex-1 p-4 sm:p-6 space-y-6">
+    <main class="flex-1 p-4 sm:p-6 pb-24 md:pb-8 space-y-6 max-w-7xl mx-auto w-full">
 
-      <!-- Page heading -->
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Laporan Harian</h1>
-          <p class="text-sm text-slate-400 mt-0.5">Ringkasan performa air dan pompa untuk tanggal yang dipilih</p>
+      <!-- =================================================================== -->
+      <!-- 1. SUMMARY CHIPS                                                    -->
+      <!-- =================================================================== -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Level Tangki Rata-rata</span>
+          <p class="text-2xl font-bold font-mono text-slate-900 mt-1">78%</p>
+          <p class="text-[11px] text-slate-400 mt-1">Seluruh Waterplant</p>
         </div>
-        <div class="flex flex-col sm:flex-row gap-2">
-          <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-400 w-full sm:w-44">
-            <i data-lucide="calendar" class="w-4 h-4"></i>
-            <input type="date" value="2026-08-31" class="bg-transparent outline-none text-sm text-slate-600 w-full">
+
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Total Akumulasi Debit</span>
+          <p class="text-2xl font-bold font-mono text-sky-600 mt-1">12.480 L</p>
+          <p class="text-[11px] text-emerald-600 font-medium mt-1">+4.2% dari target</p>
+        </div>
+
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Downtime Pompa</span>
+          <p class="text-2xl font-bold font-mono text-amber-600 mt-1">47 mnt</p>
+          <p class="text-[11px] text-slate-400 mt-1">Pompa 1 Gedung C Trip</p>
+        </div>
+
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Efisiensi Sistem</span>
+          <p class="text-2xl font-bold font-mono text-emerald-600 mt-1">96.8%</p>
+          <p class="text-[11px] text-slate-400 mt-1">Status Sangat Baik</p>
+        </div>
+
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- 2. KONSUMSI DEBIT HARIAN (Chart.js Area Fill)                       -->
+      <!-- =================================================================== -->
+      <div class="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Distribusi Debit Air Hari Ini (Per Jam)</h3>
+            <p class="text-xs text-slate-400">Total volume air terdistribusi per interval 2 jam (Liter)</p>
           </div>
-          <button class="flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-700">
-            <i data-lucide="download" class="w-4 h-4"></i>
-            Unduh PDF
-          </button>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-600 border border-sky-200/60 font-mono">
+            12.480 L Total
+          </span>
+        </div>
+        <div class="h-64">
+          <canvas id="dailyConsumptionChart"></canvas>
         </div>
       </div>
 
-      <!-- Summary cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Level Rata-rata</p>
-            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-              <i data-lucide="waves" class="w-4.5 h-4.5 text-blue-600"></i>
-            </div>
+      <!-- =================================================================== -->
+      <!-- 3. WATERPLANT REPORT TABLE (Blynk Minimalist Table)                 -->
+      <!-- =================================================================== -->
+      <div class="bg-white border border-slate-200/70 rounded-2xl overflow-hidden shadow-xs">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Performa Per Waterplant</h3>
+            <p class="text-xs text-slate-400">Rekapitulasi volume, tekanan rata-rata, dan jam kerja motor</p>
           </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">64<span class="text-base text-slate-400">%</span></p>
-          <p class="text-xs text-slate-400 mt-2">Seluruh gedung</p>
+          <span class="text-xs font-medium text-slate-500">4 Plant Terpantau</span>
         </div>
 
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Total Debit</p>
-            <div class="w-9 h-9 rounded-lg bg-sky-50 flex items-center justify-center">
-              <i data-lucide="activity" class="w-4.5 h-4.5 text-sky-600"></i>
-            </div>
-          </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">12.480<span class="text-base text-slate-400">L</span></p>
-          <p class="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> 4.2% dari kemarin
-          </p>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Downtime Pompa</p>
-            <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
-              <i data-lucide="timer-off" class="w-4.5 h-4.5 text-amber-600"></i>
-            </div>
-          </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">47<span class="text-base text-slate-400">mnt</span></p>
-          <p class="text-xs text-slate-400 mt-2">Pompa 5, Gedung C</p>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-400">Total Alarm</p>
-            <div class="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center">
-              <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-rose-600"></i>
-            </div>
-          </div>
-          <p class="text-2xl font-semibold text-slate-900 mt-2 font-mono">9</p>
-          <p class="text-xs text-slate-400 mt-2">1 kritis · 8 peringatan</p>
-        </div>
-      </div>
-
-      <!-- Chart + per-building table -->
-      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-
-        <div class="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-4">
-          <h3 class="font-semibold text-slate-900 text-sm">Total Debit per Jam</h3>
-          <p class="text-xs text-slate-400 mb-2">31 Agustus 2026 · seluruh gedung</p>
-          <div class="h-56">
-            <canvas id="dailyFlowChart"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <h3 class="font-semibold text-slate-900 text-sm mb-1">Ringkasan Kejadian</h3>
-          <p class="text-xs text-slate-400 mb-3">31 Agustus 2026</p>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-500 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Fail Pump</span>
-              <span class="font-mono text-slate-700">1</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-500 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Low Level</span>
-              <span class="font-mono text-slate-700">3</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-500 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Low Pressure</span>
-              <span class="font-mono text-slate-700">2</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-500 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>High Level</span>
-              <span class="font-mono text-slate-700">2</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-500 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Pipa Bocor</span>
-              <span class="font-mono text-slate-700">1</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Per-building table -->
-      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-100">
-          <h3 class="font-semibold text-slate-900 text-sm">Rincian per Gedung</h3>
-        </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-slate-100 text-left text-xs text-slate-400">
-                <th class="font-medium px-4 py-3">Gedung</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Level Rata-rata</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Tekanan Rata-rata</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Total Debit</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Downtime Pompa</th>
-                <th class="font-medium px-4 py-3 whitespace-nowrap">Alarm</th>
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100">
+              <tr>
+                <th class="py-3 px-4 font-semibold">Waterplant</th>
+                <th class="py-3 px-4 font-semibold">Total Debit</th>
+                <th class="py-3 px-4 font-semibold">Tekanan Rata-rata</th>
+                <th class="py-3 px-4 font-semibold">Level Tangki</th>
+                <th class="py-3 px-4 font-semibold">Status Operasi</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">Gedung A</td>
-                <td class="px-4 py-3 font-mono text-slate-600">79%</td>
-                <td class="px-4 py-3 font-mono text-slate-600">3.3 bar</td>
-                <td class="px-4 py-3 font-mono text-slate-600">3.940 L</td>
-                <td class="px-4 py-3 font-mono text-slate-600">0 mnt</td>
-                <td class="px-4 py-3"><span class="text-xs bg-amber-100 text-amber-600 font-medium px-2 py-0.5 rounded-md">2</span></td>
+            <tbody class="divide-y divide-slate-100 font-medium">
+              <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-3.5 px-4 font-bold text-slate-900">
+                  Waterplant A <span class="text-slate-400 font-normal block text-[11px]">Gedung Utama</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-sky-600">4.120 L</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">3.2 bar</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">82%</td>
+                <td class="py-3.5 px-4">
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">Optimal</span>
+                </td>
               </tr>
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">Gedung B</td>
-                <td class="px-4 py-3 font-mono text-slate-600">26%</td>
-                <td class="px-4 py-3 font-mono text-slate-600">2.9 bar</td>
-                <td class="px-4 py-3 font-mono text-slate-600">3.420 L</td>
-                <td class="px-4 py-3 font-mono text-slate-600">0 mnt</td>
-                <td class="px-4 py-3"><span class="text-xs bg-amber-100 text-amber-600 font-medium px-2 py-0.5 rounded-md">3</span></td>
+              <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-3.5 px-4 font-bold text-slate-900">
+                  Waterplant B <span class="text-slate-400 font-normal block text-[11px]">Gedung B (Tower 1)</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-sky-600">3.450 L</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">2.8 bar</td>
+                <td class="py-3.5 px-4 font-mono text-amber-600 font-bold">21%</td>
+                <td class="py-3.5 px-4">
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-600">Level Rendah</span>
+                </td>
               </tr>
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">Gedung C</td>
-                <td class="px-4 py-3 font-mono text-slate-600">64%</td>
-                <td class="px-4 py-3 font-mono text-slate-600">1.6 bar</td>
-                <td class="px-4 py-3 font-mono text-slate-600">2.180 L</td>
-                <td class="px-4 py-3 font-mono text-rose-600">47 mnt</td>
-                <td class="px-4 py-3"><span class="text-xs bg-rose-100 text-rose-600 font-medium px-2 py-0.5 rounded-md">3</span></td>
+              <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-3.5 px-4 font-bold text-slate-900">
+                  Waterplant C <span class="text-slate-400 font-normal block text-[11px]">Gedung C (Treatment)</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-slate-500">890 L</td>
+                <td class="py-3.5 px-4 font-mono text-rose-600 font-bold">0.4 bar</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">65%</td>
+                <td class="py-3.5 px-4">
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600">Trip / Perbaikan</span>
+                </td>
               </tr>
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">Gedung D</td>
-                <td class="px-4 py-3 font-mono text-slate-600">88%</td>
-                <td class="px-4 py-3 font-mono text-slate-600">3.5 bar</td>
-                <td class="px-4 py-3 font-mono text-slate-600">2.940 L</td>
-                <td class="px-4 py-3 font-mono text-slate-600">0 mnt</td>
-                <td class="px-4 py-3"><span class="text-xs bg-slate-100 text-slate-500 font-medium px-2 py-0.5 rounded-md">1</span></td>
+              <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-3.5 px-4 font-bold text-slate-900">
+                  Waterplant D <span class="text-slate-400 font-normal block text-[11px]">Gedung D (Distribusi)</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-sky-600">4.020 L</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">3.5 bar</td>
+                <td class="py-3.5 px-4 font-mono text-slate-700">90%</td>
+                <td class="py-3.5 px-4">
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">Optimal</span>
+                </td>
               </tr>
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- Report archive -->
-      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 class="font-semibold text-slate-900 text-sm">Riwayat Laporan</h3>
-          <a href="#" class="text-sm text-blue-600 font-medium hover:underline">Lihat semua</a>
-        </div>
-        <div class="divide-y divide-slate-50">
-
-          <div class="flex items-center gap-3 px-4 py-3">
-            <div class="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
-              <i data-lucide="file-text" class="w-4.5 h-4.5 text-rose-600"></i>
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-sm text-slate-700">Laporan Harian — 30 Agustus 2026</p>
-              <p class="text-xs text-slate-400">PDF · 412 KB</p>
-            </div>
-            <button class="text-slate-400 hover:text-blue-600 shrink-0">
-              <i data-lucide="download" class="w-4 h-4"></i>
-            </button>
-          </div>
-
-          <div class="flex items-center gap-3 px-4 py-3">
-            <div class="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
-              <i data-lucide="file-text" class="w-4.5 h-4.5 text-rose-600"></i>
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-sm text-slate-700">Laporan Harian — 29 Agustus 2026</p>
-              <p class="text-xs text-slate-400">PDF · 398 KB</p>
-            </div>
-            <button class="text-slate-400 hover:text-blue-600 shrink-0">
-              <i data-lucide="download" class="w-4 h-4"></i>
-            </button>
-          </div>
-
-          <div class="flex items-center gap-3 px-4 py-3">
-            <div class="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
-              <i data-lucide="file-text" class="w-4.5 h-4.5 text-rose-600"></i>
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-sm text-slate-700">Laporan Harian — 28 Agustus 2026</p>
-              <p class="text-xs text-slate-400">PDF · 405 KB</p>
-            </div>
-            <button class="text-slate-400 hover:text-blue-600 shrink-0">
-              <i data-lucide="download" class="w-4 h-4"></i>
-            </button>
-          </div>
-
         </div>
       </div>
 
@@ -335,48 +249,79 @@
   </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- BLYNK MOBILE BOTTOM NAVIGATION                                            -->
+<!-- ========================================================================= -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 flex items-center justify-around shadow-lg">
+  <a href="index.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+    <span class="text-[10px]">Beranda</span>
+  </a>
+  <a href="control.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="power" class="w-5 h-5"></i>
+    <span class="text-[10px]">Kontrol</span>
+  </a>
+  <a href="alarm.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors relative">
+    <i data-lucide="bell" class="w-5 h-5"></i>
+    <span class="text-[10px]">Alarm</span>
+    <span class="absolute top-0.5 right-2.5 w-2 h-2 rounded-full bg-rose-500"></span>
+  </a>
+  <a href="log.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="history" class="w-5 h-5"></i>
+    <span class="text-[10px]">Log</span>
+  </a>
+  <a href="report.html" class="flex flex-col items-center gap-1 py-1 px-3 text-sky-600 font-semibold transition-colors">
+    <i data-lucide="file-text" class="w-5 h-5"></i>
+    <span class="text-[10px]">Laporan</span>
+  </a>
+</nav>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT: CHART & LOGIC                                                 -->
+<!-- ========================================================================= -->
 <script>
-  lucide.createIcons();
+  const ctx = document.getElementById('dailyConsumptionChart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+  gradient.addColorStop(0, 'rgba(14, 165, 233, 0.25)');
+  gradient.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
 
-  const sidebar = document.getElementById('sidebar');
-  const backdrop = document.getElementById('backdrop');
-  const openBtn = document.getElementById('openSidebar');
-  const closeBtn = document.getElementById('closeSidebar');
-
-  function openSidebar() {
-    sidebar.classList.remove('-translate-x-full');
-    backdrop.classList.remove('hidden');
-  }
-  function closeSidebar() {
-    sidebar.classList.add('-translate-x-full');
-    backdrop.classList.add('hidden');
-  }
-  openBtn.addEventListener('click', openSidebar);
-  closeBtn.addEventListener('click', closeSidebar);
-  backdrop.addEventListener('click', closeSidebar);
-
-  const flowCtx = document.getElementById('dailyFlowChart');
-  new Chart(flowCtx, {
-    type: 'bar',
+  new Chart(ctx, {
+    type: 'line',
     data: {
-      labels: ['00','02','04','06','08','10','12','14','16','18','20','22'],
+      labels: ['00:00','02:00','04:00','06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00'],
       datasets: [{
-        data: [280,240,210,260,410,560,610,640,590,520,430,320],
-        backgroundColor: '#2563eb',
-        borderRadius: 4,
-        maxBarThickness: 22
+        label: 'Debit Air Terdistribusi (L)',
+        data: [420, 390, 350, 780, 1450, 1620, 1580, 1490, 1550, 1420, 820, 610],
+        borderColor: '#0ea5e9',
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: '#0ea5e9'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false }
+      },
       scales: {
-        y: { grid: { color: '#f1f5f9' }, ticks: { callback: v => v + 'L' } },
-        x: { grid: { display: false } }
+        y: {
+          min: 0,
+          grid: { color: '#f8fafc' },
+          ticks: { callback: v => v + ' L', font: { size: 10 } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10 } }
+        }
       }
     }
   });
+
+  lucide.createIcons();
 </script>
 
 </body>

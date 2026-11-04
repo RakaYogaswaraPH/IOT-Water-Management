@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WaterPlant Monitoring — Kontrol Pompa</title>
+<title>IOT Waterplant Monitoring — Kontrol Pompa</title>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   html {
     scroll-behavior: smooth;
   }
-  /* Hide scrollbar in all browsers while keeping scrollable */
   ::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -23,562 +22,227 @@
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
 
-  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-  /* Toggle switch */
-  .switch-track { width: 2.25rem; height: 1.25rem; border-radius: 999px; background: #e2e8f0; transition: background 200ms; position: relative; }
-  .switch-track.on { background: #2563eb; }
-  .switch-thumb { position: absolute; top: 2px; left: 2px; width: 1rem; height: 1rem; border-radius: 999px; background: #fff; transition: transform 200ms; }
-  .switch-track.on .switch-thumb { transform: translateX(1rem); }
+  /* Blynk Toggle Switch */
+  .blynk-switch {
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background-color: #e2e8f0;
+    transition: background-color 200ms ease;
+    position: relative;
+    cursor: pointer;
+  }
+  .blynk-switch.is-on {
+    background-color: #0ea5e9;
+  }
+  .blynk-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .blynk-switch.is-on .blynk-switch-thumb {
+    transform: translateX(20px);
+  }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+<body class="bg-slate-50/70 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
 
-<!-- Mobile sidebar backdrop -->
-<div id="backdrop" class="hidden fixed inset-0 bg-slate-900/40 z-30 lg:hidden"></div>
+<!-- Toast Notification -->
+<div id="toastNotification" class="fixed bottom-20 md:bottom-6 right-5 z-50 flex items-center gap-2.5 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg transform translate-y-16 opacity-0 pointer-events-none transition-all duration-300 text-xs font-medium">
+  <span id="toastText">Perintah berhasil dikirim ke perangkat</span>
+</div>
 
 <div class="flex min-h-screen">
 
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col -translate-x-full transition-transform duration-200 lg:translate-x-0 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:shrink-0">
-    <div class="flex items-center gap-3 px-5 h-16 border-b border-slate-200">
-      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-        <i data-lucide="droplets" class="w-5 h-5 text-white"></i>
+  <!-- ======================================================================= -->
+  <!-- DESKTOP / TABLET SIDEBAR                                                -->
+  <!-- ======================================================================= -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 sticky top-0 h-screen shrink-0 z-30">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
+      <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-sm shadow-sky-500/25">
+        <i data-lucide="droplet" class="w-5 h-5"></i>
       </div>
-      <div class="leading-tight">
-        <p class="font-semibold text-slate-900 text-sm">WaterPlant Monitoring</p>
-        <p class="text-xs text-slate-400">IoT Water Management</p>
+      <div>
+        <p class="font-bold text-slate-900 text-sm tracking-tight">IOT Waterplant</p>
+        <p class="text-[11px] text-slate-400 font-medium">Blynk Dashboard</p>
       </div>
-      <button id="closeSidebar" class="ml-auto lg:hidden text-slate-400 hover:text-slate-600">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-      <p class="px-3 text-xs font-medium text-slate-400 mb-2">Menu Utama</p>
+    <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <p class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">Menu</p>
 
-      <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+      <a href="index.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="layout-grid" class="w-4.5 h-4.5"></i>
         Beranda
       </a>
-      <a href="alarm.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
-        <i data-lucide="bell-ring" class="w-4.5 h-4.5"></i>
-        Alarm
-        <span class="ml-auto text-xs bg-rose-100 text-rose-600 font-semibold px-1.5 py-0.5 rounded-md">3</span>
-      </a>
-      <a href="control.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-600 border-l-2 border-blue-600 font-medium text-sm">
-        <i data-lucide="settings-2" class="w-4.5 h-4.5"></i>
+      <a href="control.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-sky-50 text-sky-600 font-semibold text-sm transition-colors">
+        <i data-lucide="power" class="w-4.5 h-4.5"></i>
         Kontrol Pompa
       </a>
-      <a href="log.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
+      <a href="alarm.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
+        <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+        Alarm
+        <span class="ml-auto text-xs bg-rose-50 text-rose-600 font-semibold px-2 py-0.5 rounded-full border border-rose-200/60">3</span>
+      </a>
+      <a href="log.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
         <i data-lucide="history" class="w-4.5 h-4.5"></i>
         Log Aktivitas
       </a>
-      <a href="report.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm border-l-2 border-transparent">
+      <a href="report.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 text-sm font-medium transition-colors">
         <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
         Laporan Harian
       </a>
     </nav>
 
-    <div class="p-3 border-t border-slate-200">
-      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm">
-        <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
-        Keluar
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center">
+          OP
+        </div>
+        <div class="leading-tight">
+          <p class="text-xs font-semibold text-slate-800">Operator</p>
+          <p class="text-[10px] text-emerald-600 flex items-center gap-1 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+          </p>
+        </div>
+      </div>
+      <a href="control.html" title="Refresh" class="text-slate-400 hover:text-slate-600 p-1.5">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       </a>
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- ======================================================================= -->
+  <!-- MAIN WORKSPACE                                                          -->
+  <!-- ======================================================================= -->
   <div class="flex-1 min-w-0 flex flex-col">
 
-    <!-- TOP BAR -->
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-20">
-      <button id="openSidebar" class="lg:hidden text-slate-500 hover:text-slate-700">
-        <i data-lucide="menu" class="w-6 h-6"></i>
-      </button>
-
-      <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full max-w-xs text-slate-400">
-        <i data-lucide="search" class="w-4 h-4"></i>
-        <input type="text" placeholder="Cari gedung, pompa, sensor..." class="bg-transparent outline-none text-sm text-slate-600 placeholder:text-slate-400 w-full">
+    <!-- Top App Bar -->
+    <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 md:hidden">
+        <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white">
+          <i data-lucide="power" class="w-4.5 h-4.5"></i>
+        </div>
+        <span class="font-bold text-slate-900 text-sm tracking-tight">Kontrol Pompa</span>
       </div>
 
-      <button class="sm:hidden ml-auto text-slate-500">
-        <i data-lucide="search" class="w-5 h-5"></i>
-      </button>
+      <div class="hidden md:block">
+        <h1 class="text-base font-bold text-slate-900">Kontrol Pompa & Relay</h1>
+        <p class="text-xs text-slate-400">Pengaturan switch relay, mode operasi, dan jam kerja pompa</p>
+      </div>
 
-      <div class="hidden sm:block flex-1"></div>
-
-      <div class="flex items-center gap-4 ml-auto sm:ml-0 shrink-0">
-        <div class="flex items-center gap-2">
-          <img src="https://i.pravatar.cc/64?img=12" class="w-8 h-8 rounded-full object-cover" alt="Admin">
-          <div class="hidden md:block leading-tight">
-            <p class="text-sm font-medium text-slate-700">Administrator</p>
-            <p class="text-xs text-slate-400">Operator</p>
-          </div>
-          <i data-lucide="chevron-down" class="hidden md:block w-4 h-4 text-slate-400"></i>
-        </div>
+      <div class="flex items-center gap-2.5">
+        <select id="waterplantFilter" onchange="filterPumps(this.value)" class="bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-sky-400 cursor-pointer">
+          <option value="all">Semua Waterplant</option>
+          <option value="Waterplant A">Waterplant A</option>
+          <option value="Waterplant B">Waterplant B</option>
+          <option value="Waterplant C">Waterplant C</option>
+          <option value="Waterplant D">Waterplant D</option>
+        </select>
       </div>
     </header>
 
-    <!-- CONTENT -->
-    <main class="flex-1 p-4 sm:p-6 space-y-6">
+    <main class="flex-1 p-4 sm:p-6 pb-24 md:pb-8 space-y-6 max-w-7xl mx-auto w-full">
 
-      <!-- Page heading -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Kontrol Pompa</h1>
-          <p class="text-sm text-slate-400 mt-0.5">Atur mode Auto/Manual, jadwal harian, dan pantau jam operasi tiap pompa untuk maintenance</p>
+      <!-- =================================================================== -->
+      <!-- 1. SUMMARY CHIPS                                                    -->
+      <!-- =================================================================== -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Total Pompa</span>
+          <p class="text-2xl font-bold font-mono text-slate-900 mt-1">8 Unit</p>
+          <p class="text-[11px] text-slate-400 mt-1">Terhubung ke 5 MCU</p>
         </div>
-        <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-400 w-full sm:w-56">
-          <i data-lucide="building-2" class="w-4 h-4"></i>
-          <select class="bg-transparent outline-none text-sm text-slate-600 w-full">
-            <option>Semua Gedung</option>
-            <option>Gedung A</option>
-            <option>Gedung B</option>
-            <option>Gedung C</option>
-            <option>Gedung D</option>
-          </select>
+
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Sedang Berjalan</span>
+          <p id="statRunningPumps" class="text-2xl font-bold font-mono text-sky-600 mt-1">5 Unit</p>
+          <p class="text-[11px] text-emerald-600 font-medium mt-1">Operasional Normal</p>
         </div>
+
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Siaga (Standby)</span>
+          <p id="statStandbyPumps" class="text-2xl font-bold font-mono text-slate-700 mt-1">2 Unit</p>
+          <p class="text-[11px] text-slate-400 mt-1">Siap Auto-Alternate</p>
+        </div>
+
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+          <span class="text-xs text-slate-400 font-medium">Kendala / Trip</span>
+          <p id="statErrorPumps" class="text-2xl font-bold font-mono text-rose-600 mt-1">1 Unit</p>
+          <p class="text-[11px] text-rose-600 font-medium mt-1">Pompa 1 Gedung C</p>
+        </div>
+
       </div>
 
-      <!-- Summary chips -->
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <p class="text-xs text-slate-400">Total Pompa</p>
-          <p class="text-2xl font-semibold text-slate-900 mt-1 font-mono">8</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <p class="text-xs text-slate-400">Mode Auto</p>
-          <p class="text-2xl font-semibold text-blue-600 mt-1 font-mono">6</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <p class="text-xs text-slate-400">Mode Manual</p>
-          <p class="text-2xl font-semibold text-slate-600 mt-1 font-mono">2</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-          <p class="text-xs text-slate-400">Sedang Berjalan</p>
-          <p class="text-2xl font-semibold text-emerald-600 mt-1 font-mono">5</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-4 col-span-2 sm:col-span-1">
-          <p class="text-xs text-slate-400">Perlu Maintenance</p>
-          <p class="text-2xl font-semibold text-amber-600 mt-1 font-mono">2</p>
-        </div>
-      </div>
-
-      <!-- Gedung A -->
+      <!-- =================================================================== -->
+      <!-- 2. PUMP RELAY CARDS (Blynk Switch Widgets)                           -->
+      <!-- =================================================================== -->
       <div>
-        <div class="flex items-center gap-2 mb-3 px-1">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <h2 class="text-base font-semibold text-slate-900">Gedung A</h2>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Switch Relay Pompa</h2>
+            <p class="text-xs text-slate-400">Klik saklar switch untuk on/off pompa secara manual atau alihkan mode</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">ESP32 GPIO Control</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <!-- Pompa 1 - Auto / Alternate / Running -->
-          <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-slate-800 text-sm">Pompa 1</p>
-                <p class="text-xs text-slate-400 mt-0.5">Ruang Pompa Utama</p>
-              </div>
-              <span class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Berjalan
-              </span>
-            </div>
-
-            <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-              <p class="text-sm text-slate-500">Mode Operasi</p>
-              <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">Auto</button>
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md text-slate-500">Manual</button>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <p class="text-sm text-slate-500 mb-2">Konfigurasi Auto</p>
-              <div class="flex items-center gap-2">
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">Alternate</button>
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-white text-slate-500 border border-slate-200">Backup</button>
-              </div>
-            </div>
-
-            <!-- Jadwal Otomatis Harian -->
-            <div class="mt-3 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>Jadwal Otomatis Harian</p>
-                <div class="switch-track on"><div class="switch-thumb"></div></div>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-xs text-slate-400">Nyala</label>
-                  <input type="time" value="05:00" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-                <div>
-                  <label class="text-xs text-slate-400">Mati</label>
-                  <input type="time" value="21:00" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Bergantian otomatis dengan Pompa 2 setiap hari</p>
-            </div>
-
-            <!-- Hour meter -->
-            <div class="mt-4 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-1.5">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="gauge-circle" class="w-3.5 h-3.5"></i>Hour Meter</p>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-600">Segera Servis</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-lg font-mono font-semibold text-slate-800">4.820</span>
-                <span class="text-xs text-slate-400">/ 5.000 jam</span>
-              </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full bg-amber-500 rounded-full" style="width:96%"></div>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">180 jam lagi menuju jadwal servis berikutnya</p>
-            </div>
-          </div>
-
-          <!-- Pompa 2 - Auto / Alternate / Standby -->
-          <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-slate-800 text-sm">Pompa 2</p>
-                <p class="text-xs text-slate-400 mt-0.5">Ruang Pompa Utama</p>
-              </div>
-              <span class="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                Siaga
-              </span>
-            </div>
-
-            <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-              <p class="text-sm text-slate-500">Mode Operasi</p>
-              <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">Auto</button>
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md text-slate-500">Manual</button>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <p class="text-sm text-slate-500 mb-2">Konfigurasi Auto</p>
-              <div class="flex items-center gap-2">
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">Alternate</button>
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-white text-slate-500 border border-slate-200">Backup</button>
-              </div>
-            </div>
-
-            <!-- Jadwal Otomatis Harian -->
-            <div class="mt-3 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>Jadwal Otomatis Harian</p>
-                <div class="switch-track on"><div class="switch-thumb"></div></div>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-xs text-slate-400">Nyala</label>
-                  <input type="time" value="21:00" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-                <div>
-                  <label class="text-xs text-slate-400">Mati</label>
-                  <input type="time" value="05:00" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Bergantian otomatis dengan Pompa 1 setiap hari</p>
-            </div>
-
-            <!-- Hour meter -->
-            <div class="mt-4 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-1.5">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="gauge-circle" class="w-3.5 h-3.5"></i>Hour Meter</p>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">Aman</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-lg font-mono font-semibold text-slate-800">3.150</span>
-                <span class="text-xs text-slate-400">/ 5.000 jam</span>
-              </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full bg-emerald-500 rounded-full" style="width:63%"></div>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">1.850 jam lagi menuju jadwal servis berikutnya</p>
-            </div>
-          </div>
-
+        <div id="pumpCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <!-- Rendered by JS -->
         </div>
       </div>
 
-      <!-- Gedung B -->
-      <div>
-        <div class="flex items-center gap-2 mb-3 px-1">
-          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-          <h2 class="text-base font-semibold text-slate-900">Gedung B</h2>
+      <!-- =================================================================== -->
+      <!-- 3. OTOMASI & JADWAL ROTASI (Blynk Automation Style)                 -->
+      <!-- =================================================================== -->
+      <div class="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Jadwal Siklus Rotasi (Auto-Alternate)</h3>
+            <p class="text-xs text-slate-400">Penyeimbang jam kerja pompa otomatis untuk memperpanjang usia motor</p>
+          </div>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-600 border border-sky-200/60">
+            Aktif
+          </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <!-- Pompa 3 - Auto / Backup / Running -->
-          <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-slate-800 text-sm">Pompa 3</p>
-                <p class="text-xs text-slate-400 mt-0.5">Ruang Pompa Lantai 1</p>
-              </div>
-              <span class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Berjalan
-              </span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="bg-slate-50/80 p-3.5 rounded-xl border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="font-bold text-slate-800">Waterplant A (Gedung A)</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Rotasi per 6 Jam · P1 & P2</p>
             </div>
-
-            <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-              <p class="text-sm text-slate-500">Mode Operasi</p>
-              <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">Auto</button>
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md text-slate-500">Manual</button>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <p class="text-sm text-slate-500 mb-2">Konfigurasi Auto</p>
-              <div class="flex items-center gap-2">
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-white text-slate-500 border border-slate-200">Alternate</button>
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">Backup</button>
-              </div>
-            </div>
-
-            <!-- Jadwal Otomatis Harian -->
-            <div class="mt-3 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>Jadwal Otomatis Harian</p>
-                <div class="switch-track on"><div class="switch-thumb"></div></div>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-xs text-slate-400">Nyala</label>
-                  <input type="time" value="00:00" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-                <div>
-                  <label class="text-xs text-slate-400">Mati</label>
-                  <input type="time" value="23:59" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Beroperasi penuh, Pompa 4 siaga sebagai backup</p>
-            </div>
-
-            <!-- Hour meter -->
-            <div class="mt-4 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-1.5">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="gauge-circle" class="w-3.5 h-3.5"></i>Hour Meter</p>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">Aman</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-lg font-mono font-semibold text-slate-800">2.040</span>
-                <span class="text-xs text-slate-400">/ 5.000 jam</span>
-              </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full bg-emerald-500 rounded-full" style="width:41%"></div>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">2.960 jam lagi menuju jadwal servis berikutnya</p>
-            </div>
+            <span class="font-mono text-sky-600 font-semibold text-[11px]">Sisa: 2j 14m</span>
           </div>
 
-          <!-- Pompa 4 - Manual / Stopped -->
-          <div class="bg-white border border-rose-200 rounded-xl p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-slate-800 text-sm">Pompa 4</p>
-                <p class="text-xs text-slate-400 mt-0.5">Ruang Pompa Lantai 1</p>
-              </div>
-              <span class="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                Berhenti
-              </span>
+          <div class="bg-slate-50/80 p-3.5 rounded-xl border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="font-bold text-slate-800">Waterplant B (Gedung B)</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Booster Trigger (Level < 30%)</p>
             </div>
-
-            <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-              <p class="text-sm text-slate-500">Mode Operasi</p>
-              <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md text-slate-500">Auto</button>
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">Manual</button>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <p class="text-sm text-slate-500 mb-2">Kendali Manual</p>
-              <div class="flex items-center gap-2">
-                <button class="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-slate-200 text-slate-400 cursor-not-allowed" disabled>
-                  <i data-lucide="play" class="w-3.5 h-3.5"></i> Nyalakan
-                </button>
-                <button class="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-slate-100 text-slate-500">
-                  <i data-lucide="square" class="w-3.5 h-3.5"></i> Matikan
-                </button>
-              </div>
-              <p class="text-xs text-rose-600 mt-2 flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i>Terkunci: melewati batas jam servis</p>
-            </div>
-
-            <!-- Jadwal Otomatis Harian (disabled, mode manual) -->
-            <div class="mt-3 pt-3 border-t border-slate-100 opacity-50">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>Jadwal Otomatis Harian</p>
-                <div class="switch-track"><div class="switch-thumb"></div></div>
-              </div>
-              <p class="text-xs text-slate-400">Aktifkan mode Auto untuk mengatur jadwal</p>
-            </div>
-
-            <!-- Hour meter -->
-            <div class="mt-4 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-1.5">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="gauge-circle" class="w-3.5 h-3.5"></i>Hour Meter</p>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-rose-50 text-rose-600">Overdue</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-lg font-mono font-semibold text-slate-800">5.410</span>
-                <span class="text-xs text-slate-400">/ 5.000 jam</span>
-              </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full bg-rose-500 rounded-full" style="width:100%"></div>
-              </div>
-              <p class="text-xs text-rose-600 mt-1">Lewat 410 jam dari jadwal servis — perlu maintenance segera</p>
-            </div>
+            <span class="font-mono text-emerald-600 font-semibold text-[11px]">Siaga Auto</span>
           </div>
 
-        </div>
-      </div>
-
-      <!-- Gedung C -->
-      <div>
-        <div class="flex items-center gap-2 mb-3 px-1">
-          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-          <h2 class="text-base font-semibold text-slate-900">Gedung C</h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <!-- Pompa 5 - Manual / Fail -->
-          <div class="bg-white border border-rose-200 rounded-xl p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-slate-800 text-sm">Pompa 5</p>
-                <p class="text-xs text-slate-400 mt-0.5">Ruang Pompa Utama</p>
-              </div>
-              <span class="flex items-center gap-1.5 text-xs font-medium text-rose-600 bg-rose-50 px-2 py-1 rounded-md">
-                <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i>
-                Gagal
-              </span>
+          <div class="bg-slate-50/80 p-3.5 rounded-xl border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="font-bold text-slate-800">Waterplant D (Gedung D)</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Distribusi Siang 06:00 - 18:00</p>
             </div>
-
-            <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-              <p class="text-sm text-slate-500">Mode Operasi</p>
-              <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md text-slate-500">Auto</button>
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">Manual</button>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <p class="text-sm text-slate-500 mb-2">Kendali Manual</p>
-              <div class="flex items-center gap-2">
-                <button class="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
-                  <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Coba Ulang
-                </button>
-                <button class="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-slate-100 text-slate-500">
-                  <i data-lucide="square" class="w-3.5 h-3.5"></i> Matikan
-                </button>
-              </div>
-            </div>
-
-            <!-- Jadwal Otomatis Harian (disabled, mode manual) -->
-            <div class="mt-3 pt-3 border-t border-slate-100 opacity-50">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>Jadwal Otomatis Harian</p>
-                <div class="switch-track"><div class="switch-thumb"></div></div>
-              </div>
-              <p class="text-xs text-slate-400">Aktifkan mode Auto untuk mengatur jadwal</p>
-            </div>
-
-            <!-- Hour meter -->
-            <div class="mt-4 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-1.5">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="gauge-circle" class="w-3.5 h-3.5"></i>Hour Meter</p>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-rose-50 text-rose-600">Segera Servis</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-lg font-mono font-semibold text-slate-800">4.995</span>
-                <span class="text-xs text-slate-400">/ 5.000 jam</span>
-              </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full bg-rose-500 rounded-full" style="width:100%"></div>
-              </div>
-              <p class="text-xs text-rose-600 mt-1">Gagal berjalan tepat saat mendekati batas servis — indikasi keausan</p>
-            </div>
+            <span class="font-mono text-sky-600 font-semibold text-[11px]">Berjalan</span>
           </div>
-
-          <!-- Pompa 6 - Auto / Alternate / Running -->
-          <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-slate-800 text-sm">Pompa 6</p>
-                <p class="text-xs text-slate-400 mt-0.5">Ruang Pompa Cadangan</p>
-              </div>
-              <span class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Berjalan
-              </span>
-            </div>
-
-            <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-              <p class="text-sm text-slate-500">Mode Operasi</p>
-              <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">Auto</button>
-                <button class="text-xs font-medium px-3 py-1.5 rounded-md text-slate-500">Manual</button>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <p class="text-sm text-slate-500 mb-2">Konfigurasi Auto</p>
-              <div class="flex items-center gap-2">
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">Alternate</button>
-                <button class="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-white text-slate-500 border border-slate-200">Backup</button>
-              </div>
-            </div>
-
-            <!-- Jadwal Otomatis Harian -->
-            <div class="mt-3 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>Jadwal Otomatis Harian</p>
-                <div class="switch-track on"><div class="switch-thumb"></div></div>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-xs text-slate-400">Nyala</label>
-                  <input type="time" value="00:00" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-                <div>
-                  <label class="text-xs text-slate-400">Mati</label>
-                  <input type="time" value="23:59" class="w-full mt-1 text-sm font-mono border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 outline-none focus:border-blue-400">
-                </div>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Mengambil alih otomatis karena Pompa 5 gagal</p>
-            </div>
-
-            <!-- Hour meter -->
-            <div class="mt-4 pt-3 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-1.5">
-                <p class="text-sm text-slate-500 flex items-center gap-1.5"><i data-lucide="gauge-circle" class="w-3.5 h-3.5"></i>Hour Meter</p>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">Aman</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-lg font-mono font-semibold text-slate-800">812</span>
-                <span class="text-xs text-slate-400">/ 5.000 jam</span>
-              </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full bg-emerald-500 rounded-full" style="width:16%"></div>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">4.188 jam lagi menuju jadwal servis berikutnya</p>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -586,34 +250,174 @@
   </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- BLYNK MOBILE BOTTOM NAVIGATION                                            -->
+<!-- ========================================================================= -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 flex items-center justify-around shadow-lg">
+  <a href="index.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+    <span class="text-[10px]">Beranda</span>
+  </a>
+  <a href="control.html" class="flex flex-col items-center gap-1 py-1 px-3 text-sky-600 font-semibold transition-colors">
+    <i data-lucide="power" class="w-5 h-5"></i>
+    <span class="text-[10px]">Kontrol</span>
+  </a>
+  <a href="alarm.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors relative">
+    <i data-lucide="bell" class="w-5 h-5"></i>
+    <span class="text-[10px]">Alarm</span>
+    <span class="absolute top-0.5 right-2.5 w-2 h-2 rounded-full bg-rose-500"></span>
+  </a>
+  <a href="log.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="history" class="w-5 h-5"></i>
+    <span class="text-[10px]">Log</span>
+  </a>
+  <a href="report.html" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-slate-600 transition-colors">
+    <i data-lucide="file-text" class="w-5 h-5"></i>
+    <span class="text-[10px]">Laporan</span>
+  </a>
+</nav>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT: PUMP RELAY LOGIC                                              -->
+<!-- ========================================================================= -->
 <script>
-  lucide.createIcons();
+  const pumps = [
+    { id: 1, name: 'Pompa Transfer 1', plant: 'Waterplant A', location: 'Gedung A', isOn: true, mode: 'Auto', status: 'Berjalan', power: '2.2 kW', current: '9.8 A', hours: 1420 },
+    { id: 2, name: 'Pompa Transfer 2', plant: 'Waterplant A', location: 'Gedung A', isOn: false, mode: 'Auto', status: 'Siaga', power: '0.0 kW', current: '0.0 A', hours: 1395 },
+    { id: 3, name: 'Pompa Booster 1', plant: 'Waterplant B', location: 'Gedung B', isOn: true, mode: 'Auto', status: 'Berjalan', power: '1.5 kW', current: '6.9 A', hours: 860 },
+    { id: 4, name: 'Pompa Booster 2', plant: 'Waterplant B', location: 'Gedung B', isOn: false, mode: 'Auto', status: 'Siaga', power: '0.0 kW', current: '0.0 A', hours: 820 },
+    { id: 5, name: 'Pompa Treatment 1', plant: 'Waterplant C', location: 'Gedung C', isOn: false, mode: 'Manual', status: 'Error', power: '0.0 kW', current: '0.0 A', hours: 2100 },
+    { id: 6, name: 'Pompa Treatment 2', plant: 'Waterplant C', location: 'Gedung C', isOn: true, mode: 'Manual', status: 'Berjalan', power: '3.0 kW', current: '13.4 A', hours: 1980 },
+    { id: 7, name: 'Pompa Distribusi 1', plant: 'Waterplant D', location: 'Gedung D', isOn: true, mode: 'Auto', status: 'Berjalan', power: '2.5 kW', current: '11.2 A', hours: 1650 },
+    { id: 8, name: 'Pompa Distribusi 2', plant: 'Waterplant D', location: 'Gedung D', isOn: true, mode: 'Auto', status: 'Berjalan', power: '2.5 kW', current: '11.1 A', hours: 1640 }
+  ];
 
-  // Sidebar toggle (mobile)
-  const sidebar = document.getElementById('sidebar');
-  const backdrop = document.getElementById('backdrop');
-  const openBtn = document.getElementById('openSidebar');
-  const closeBtn = document.getElementById('closeSidebar');
+  let selectedPlant = 'all';
 
-  function openSidebar() {
-    sidebar.classList.remove('-translate-x-full');
-    backdrop.classList.remove('hidden');
+  function renderPumps() {
+    const grid = document.getElementById('pumpCardsGrid');
+    grid.innerHTML = '';
+
+    const filtered = pumps.filter(p => selectedPlant === 'all' || p.plant === selectedPlant);
+
+    // Update stats
+    const running = pumps.filter(p => p.isOn).length;
+    const standby = pumps.filter(p => !p.isOn && p.status !== 'Error').length;
+    const err = pumps.filter(p => p.status === 'Error').length;
+
+    document.getElementById('statRunningPumps').textContent = `${running} Unit`;
+    document.getElementById('statStandbyPumps').textContent = `${standby} Unit`;
+    document.getElementById('statErrorPumps').textContent = `${err} Unit`;
+
+    filtered.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-col justify-between hover:border-sky-300 transition-all';
+      
+      let badgeClass = 'bg-slate-100 text-slate-600';
+      if (p.status === 'Berjalan') badgeClass = 'bg-sky-50 text-sky-600 font-semibold';
+      if (p.status === 'Error') badgeClass = 'bg-rose-50 text-rose-600 font-semibold';
+
+      card.innerHTML = `
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">${p.plant}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeClass}">${p.status}</span>
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900">${p.name}</h4>
+          <p class="text-xs text-slate-400 mt-0.5">${p.location}</p>
+
+          <div class="my-4 flex items-center justify-between p-3 rounded-xl bg-slate-50/80 border border-slate-100">
+            <div>
+              <span class="text-[10px] text-slate-400 block uppercase">Saklar Daya</span>
+              <span class="text-xs font-bold ${p.isOn ? 'text-sky-600' : 'text-slate-400'}">${p.isOn ? 'POWER ON' : 'OFF'}</span>
+            </div>
+            
+            <!-- Blynk switch toggle -->
+            <div class="blynk-switch ${p.isOn ? 'is-on' : ''}" onclick="togglePumpPower(${p.id})">
+              <div class="blynk-switch-thumb"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-center text-[11px] pt-1 border-t border-slate-100">
+            <div>
+              <span class="text-slate-400 text-[10px] block">Daya</span>
+              <span class="font-mono font-semibold text-slate-700">${p.power}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] block">Arus</span>
+              <span class="font-mono font-semibold text-slate-700">${p.current}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] block">Jam Kerja</span>
+              <span class="font-mono font-semibold text-slate-700">${p.hours}j</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-medium">Mode:</span>
+          <button onclick="togglePumpMode(${p.id})" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors ${
+            p.mode === 'Auto' ? 'bg-sky-50 text-sky-600 border-sky-200' : 'bg-slate-100 text-slate-700 border-slate-200'
+          }">
+            ${p.mode} (Ganti)
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    lucide.createIcons();
   }
-  function closeSidebar() {
-    sidebar.classList.add('-translate-x-full');
-    backdrop.classList.add('hidden');
+
+  function togglePumpPower(id) {
+    const pump = pumps.find(p => p.id === id);
+    if (!pump) return;
+
+    if (pump.status === 'Error') {
+      showToast('Pompa berstatus Error! Periksa proteksi fisik sebelum menyalakan.');
+      return;
+    }
+
+    pump.isOn = !pump.isOn;
+    pump.status = pump.isOn ? 'Berjalan' : 'Siaga';
+    pump.power = pump.isOn ? (pump.name.includes('Treatment') ? '3.0 kW' : '2.2 kW') : '0.0 kW';
+    pump.current = pump.isOn ? '9.8 A' : '0.0 A';
+
+    renderPumps();
+    showToast(`${pump.name} berhasil di-${pump.isOn ? 'nyalakan' : 'matikan'}`);
   }
-  openBtn.addEventListener('click', openSidebar);
-  closeBtn.addEventListener('click', closeSidebar);
-  backdrop.addEventListener('click', closeSidebar);
 
-  // Toggle switches for daily schedule (visual only)
-  document.querySelectorAll('.switch-track').forEach(track => {
-    track.addEventListener('click', () => track.classList.toggle('on'));
-  });
+  function togglePumpMode(id) {
+    const pump = pumps.find(p => p.id === id);
+    if (!pump) return;
 
-  // Mode toggle: Auto / Manual switches the config panel shown per card
-  document.querySelectorAll('[data-pump]').forEach(() => {});
+    pump.mode = pump.mode === 'Auto' ? 'Manual' : 'Auto';
+    renderPumps();
+    showToast(`Mode ${pump.name} diubah ke ${pump.mode}`);
+  }
+
+  function filterPumps(val) {
+    selectedPlant = val;
+    renderPumps();
+  }
+
+  let toastTimer = null;
+  function showToast(text) {
+    const el = document.getElementById('toastNotification');
+    const txt = document.getElementById('toastText');
+    txt.textContent = text;
+    el.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+    el.classList.add('translate-y-0', 'opacity-100');
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      el.classList.remove('translate-y-0', 'opacity-100');
+      el.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+    }, 2500);
+  }
+
+  renderPumps();
 </script>
 
 </body>
